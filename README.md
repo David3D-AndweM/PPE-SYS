@@ -290,6 +290,70 @@ make task name=<celery.task.path>  # Run a Celery task manually
 
 ---
 
+## CI/CD Pipeline
+
+Three GitHub Actions workflows ship with the project:
+
+### Backend CI (`backend-ci.yml`)
+Triggers on pushes/PRs to `main` or `develop` that touch `backend/**`.
+
+| Job | What it does |
+|---|---|
+| `test` | Spins up Postgres 16 + Redis 7, installs deps, runs flake8 + black + isort, then `pytest --cov` |
+| `security` | Trivy filesystem scan → uploads SARIF to GitHub Security |
+| `build` | Builds multi-arch Docker image (`linux/amd64,arm64`) → pushes to GHCR; tagged by branch, semver, and `latest` on `main` |
+| `notify` | Sends success/failure email to `BACKEND_TEAM_EMAIL` via SMTP secrets |
+
+### Frontend CI (`frontend-ci.yml`)
+Triggers on pushes/PRs that touch `frontend/**`.
+
+| Job | What it does |
+|---|---|
+| `test` | `flutter analyze` + `flutter test --coverage` → uploads to Codecov |
+| `security` | Trivy scan on `frontend/` directory |
+| `build-apk` | `flutter build apk --debug` → uploads APK artifact (30-day retention) |
+| `build-ios` | `flutter build ios --debug --no-codesign` on `macos-latest` |
+| `notify` | Email on success/failure to `FRONTEND_TEAM_EMAIL` |
+
+### Integration & Deployment (`integration-deploy.yml`)
+
+| Trigger | Job | Target |
+|---|---|---|
+| Push to `develop` after both CI pipelines pass | `deploy-staging` | `staging` GitHub environment → `staging.ppe-system.internal` |
+| Push of `v*` tag | `deploy-production` | `production` GitHub environment → `ppe-system.app` |
+
+Production job also creates a GitHub Release via `softprops/action-gh-release`.
+
+### Required GitHub Secrets
+
+```
+SECRET_KEY              # Django secret key
+MAIL_SERVER             # SMTP host (e.g. smtp.sendgrid.net)
+MAIL_PORT               # SMTP port (e.g. 587)
+MAIL_USERNAME           # SMTP username
+MAIL_PASSWORD           # SMTP password / API key
+BACKEND_TEAM_EMAIL      # Recipient for backend notifications
+FRONTEND_TEAM_EMAIL     # Recipient for frontend notifications
+DEVOPS_TEAM_EMAIL       # Recipient for deploy notifications
+QA_TEAM_EMAIL           # Recipient for staging-ready notifications
+STAGING_DEPLOY_KEY      # SSH key or token for staging server
+STAGING_DEPLOY_URL      # Staging server endpoint
+PROD_DEPLOY_KEY         # SSH key or token for production server
+PROD_DEPLOY_URL         # Production server endpoint
+```
+
+### Running in Chrome (dev)
+
+The Flutter app supports web:
+```bash
+cd frontend
+flutter run -d chrome --web-port 3000
+# Visit http://localhost:3000
+# API is proxied through nginx on http://localhost/api/v1
+```
+
+---
+
 ## Production Deployment Checklist
 
 - [ ] Set strong `SECRET_KEY`, `POSTGRES_PASSWORD`, `QR_SECRET_KEY` in `.env`
@@ -321,11 +385,20 @@ PPE_SYSTEM/
 │   ├── notifications/    In-app + WebSocket notifications
 │   ├── audit/            Immutable audit trail
 │   └── celery_tasks/     Expiry engine, alert scheduler, stock monitor
-├── frontend/             Flutter app (feature-first)
+├── frontend/             Flutter app (feature-first, web + Android + iOS)
 ├── fixtures/             Demo data (numbered, load in order)
 ├── scripts/seed.sh       Database seeding script
 ├── docker-compose.yml    Local dev orchestration
 ├── docker-compose.prod.yml
 ├── Makefile              Developer convenience commands
-└── .env.example          Environment variable template
+├── .env.example          Environment variable template
+└── .github/
+    ├── workflows/
+    │   ├── backend-ci.yml        (test → security → build → notify)
+    │   ├── frontend-ci.yml       (test → security → build APK/iOS → notify)
+    │   ├── integration-deploy.yml (staging on develop, production on v* tag)
+    │   └── dependency-check.yml
+    ├── ARCHITECTURE.md
+    ├── CICD_GUIDE.md
+    └── QUICK_START.md
 ```
