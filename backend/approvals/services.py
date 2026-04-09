@@ -101,8 +101,8 @@ def reject(approval_id, user, comment=""):
 
     # Notify requester
     try:
-        from notifications.services import dispatch
         from notifications.models import NotificationType
+        from notifications.services import dispatch
 
         dispatch(
             user=slip.requested_by,

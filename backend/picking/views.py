@@ -62,8 +62,8 @@ class CreatePickingSlipView(APIView):
         serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
 
-        from organization.models import Employee
         from inventory.models import Warehouse
+        from organization.models import Employee
 
         try:
             employee = Employee.objects.get(pk=d["employee_id"])

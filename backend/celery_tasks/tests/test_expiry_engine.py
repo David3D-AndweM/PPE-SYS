@@ -94,7 +94,7 @@ class TestExpiryEngine:
         ).exists()
 
     def test_critical_expired_dispatches_admin_notification(self, critical_employee_ppe_expired, admin_user):
-        from accounts.factories import UserRoleFactory, RoleFactory
+        from accounts.factories import RoleFactory, UserRoleFactory
 
         # Ensure admin user is on the same site
         site = critical_employee_ppe_expired.employee.department.site

@@ -27,8 +27,8 @@ def create_slip(employee, ppe_items_with_qty, request_type, requested_by, notes=
 
     Returns the created PickingSlip.
     """
-    from core.utils.qr import generate_slip_qr_payload
     from approvals.services import create_approvals_for_slip
+    from core.utils.qr import generate_slip_qr_payload
     from ppe.services import resolve_ppe_config
 
     slip = PickingSlip.objects.create(
@@ -151,8 +151,8 @@ def finalize_issue(slip, store_officer, warehouse):
 
     from django.utils import timezone
 
-    from inventory.services import deduct_stock
     from inventory.models import ReferenceType
+    from inventory.services import deduct_stock
     from ppe.services import update_ppe_after_issue
 
     if slip.status != SlipStatus.APPROVED:

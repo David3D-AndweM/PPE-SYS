@@ -1,9 +1,10 @@
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.permissions import IsAdmin, IsAdminOrManager, IsStoreOfficer
+from ppe.models import PPEItem
 
 from .models import StockItem, StockMovement, Warehouse
 from .serializers import (
@@ -13,7 +14,6 @@ from .serializers import (
     WarehouseSerializer,
 )
 from .services import receive_stock
-from ppe.models import PPEItem
 
 
 class WarehouseListCreateView(ListCreateAPIView):

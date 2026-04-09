@@ -4,10 +4,10 @@ Approval workflow tests — role enforcement, approve/reject propagation.
 
 import pytest
 
+from accounts.factories import RoleFactory, UserRoleFactory
 from approvals.models import Approval, ApprovalStatus
-from picking.models import PickingSlip, SlipStatus
 from picking.factories import PickingSlipFactory
-from accounts.factories import UserRoleFactory, RoleFactory
+from picking.models import PickingSlip, SlipStatus
 
 
 @pytest.fixture

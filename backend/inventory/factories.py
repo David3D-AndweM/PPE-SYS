@@ -3,6 +3,7 @@ from factory.django import DjangoModelFactory
 
 from organization.factories import SiteFactory
 from ppe.factories import PPEItemFactory
+
 from .models import StockItem, Warehouse
 
 
