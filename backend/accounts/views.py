@@ -80,6 +80,7 @@ class RoleListView(RetrieveAPIView):
 
 class PasswordResetRequestView(APIView):
     """Step 1: Request a password reset email. Works for any registered email."""
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -112,6 +113,7 @@ class PasswordResetRequestView(APIView):
 
 class PasswordResetConfirmView(APIView):
     """Step 2: Submit uid + token + new password to complete the reset."""
+
     permission_classes = [AllowAny]
 
     def post(self, request):

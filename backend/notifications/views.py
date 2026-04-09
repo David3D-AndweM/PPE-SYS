@@ -27,9 +27,7 @@ class MarkReadView(APIView):
     def post(self, request, pk):
         success = mark_read(pk, request.user)
         if not success:
-            return Response(
-                {"error": "Notification not found."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Notification not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response({"marked_read": True})
 
 

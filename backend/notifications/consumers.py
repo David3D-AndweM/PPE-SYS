@@ -88,8 +88,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         from notifications.services import mark_read
 
         success = await database_sync_to_async(mark_read)(notification_id, self.user)
-        await self.send(text_data=json.dumps({
-            "action": "marked_read",
-            "notification_id": notification_id,
-            "success": success,
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "marked_read",
+                    "notification_id": notification_id,
+                    "success": success,
+                }
+            )
+        )

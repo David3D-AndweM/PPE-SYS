@@ -27,13 +27,16 @@ def dispatch(user, notification_type, title, message, entity_type="", entity_id=
         entity_id=entity_id,
     )
 
-    _push_to_websocket(user.id, {
-        "id": str(notification.id),
-        "type": notification_type,
-        "title": title,
-        "message": message,
-        "created_at": notification.created_at.isoformat(),
-    })
+    _push_to_websocket(
+        user.id,
+        {
+            "id": str(notification.id),
+            "type": notification_type,
+            "title": title,
+            "message": message,
+            "created_at": notification.created_at.isoformat(),
+        },
+    )
 
     return notification
 
@@ -56,10 +59,14 @@ def dispatch_to_role(site, role_name, notification_type, title, message):
     """
     from accounts.models import UserRole
 
-    user_ids = UserRole.objects.filter(
-        role__name=role_name,
-        site=site,
-    ).values_list("user_id", flat=True).distinct()
+    user_ids = (
+        UserRole.objects.filter(
+            role__name=role_name,
+            site=site,
+        )
+        .values_list("user_id", flat=True)
+        .distinct()
+    )
 
     from accounts.models import User
 
@@ -69,9 +76,7 @@ def dispatch_to_role(site, role_name, notification_type, title, message):
 
 def mark_read(notification_id, user):
     """Mark a single notification as read. Validates ownership."""
-    updated = Notification.objects.filter(
-        id=notification_id, user=user
-    ).update(is_read=True)
+    updated = Notification.objects.filter(id=notification_id, user=user).update(is_read=True)
     return updated > 0
 
 

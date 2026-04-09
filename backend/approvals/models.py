@@ -55,10 +55,7 @@ class Approval(TimeStampedModel):
         ordering = ["created_at"]
 
     def __str__(self):
-        return (
-            f"Approval [{self.required_role}] for slip {self.picking_slip_id} "
-            f"— {self.status}"
-        )
+        return f"Approval [{self.required_role}] for slip {self.picking_slip_id} " f"— {self.status}"
 
     def mark_approved(self, approver, comment=""):
         self.approver = approver

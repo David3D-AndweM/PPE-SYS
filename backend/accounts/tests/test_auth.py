@@ -20,6 +20,7 @@ class TestLogin:
     def test_jwt_contains_roles(self, manager_user):
         import jwt as pyjwt
         from django.conf import settings
+
         resp = APIClient().post(self.url, {"email": "manager@test.com", "password": "TestPass1234!"})
         # Decode without verification to inspect claims (HS256, signed by backend)
         payload = pyjwt.decode(resp.data["access"], options={"verify_signature": False})

@@ -23,19 +23,20 @@ class SiteSerializer(serializers.ModelSerializer):
 
 class DepartmentSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True)
-    manager_name = serializers.CharField(
-        source="manager.get_full_name", read_only=True, default=None
-    )
-    safety_officer_name = serializers.CharField(
-        source="safety_officer.get_full_name", read_only=True, default=None
-    )
+    manager_name = serializers.CharField(source="manager.get_full_name", read_only=True, default=None)
+    safety_officer_name = serializers.CharField(source="safety_officer.get_full_name", read_only=True, default=None)
 
     class Meta:
         model = Department
         fields = [
-            "id", "site", "site_name", "name",
-            "manager", "manager_name",
-            "safety_officer", "safety_officer_name",
+            "id",
+            "site",
+            "site_name",
+            "name",
+            "manager",
+            "manager_name",
+            "safety_officer",
+            "safety_officer_name",
             "is_active",
         ]
         read_only_fields = ["id"]
@@ -50,9 +51,16 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = [
-            "id", "user", "user_email", "full_name",
-            "department", "department_name", "site_name",
-            "mine_number", "role_title", "status",
+            "id",
+            "user",
+            "user_email",
+            "full_name",
+            "department",
+            "department_name",
+            "site_name",
+            "mine_number",
+            "role_title",
+            "status",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
@@ -63,6 +71,7 @@ class EmployeeTransferSerializer(serializers.Serializer):
 
     def validate_department_id(self, value):
         from .models import Department
+
         try:
             Department.objects.get(pk=value)
         except Department.DoesNotExist:

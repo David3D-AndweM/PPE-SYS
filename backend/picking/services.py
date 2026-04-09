@@ -63,10 +63,12 @@ def create_slip(employee, ppe_items_with_qty, request_type, requested_by, notes=
         # No approval required — auto-approve
         slip.status = SlipStatus.APPROVED
         from django.utils import timezone
+
         slip.approved_at = timezone.now()
         slip.save(update_fields=["status", "approved_at"])
 
     from audit.models import log_action
+
     log_action(
         action="picking_slip_created",
         entity_type="PickingSlip",
@@ -81,7 +83,9 @@ def create_slip(employee, ppe_items_with_qty, request_type, requested_by, notes=
 
     logger.info(
         "PickingSlip %s created for employee %s (%s items)",
-        slip.id, employee.mine_number, len(ppe_items_with_qty),
+        slip.id,
+        employee.mine_number,
+        len(ppe_items_with_qty),
     )
     return slip
 
@@ -105,9 +109,11 @@ def validate_scan(raw_qr_data, scanned_by):
 
     slip_id = payload.get("slip_id")
     try:
-        slip = PickingSlip.objects.select_related(
-            "employee__user", "employee__department__site"
-        ).prefetch_related("items__ppe_item", "approvals").get(pk=slip_id)
+        slip = (
+            PickingSlip.objects.select_related("employee__user", "employee__department__site")
+            .prefetch_related("items__ppe_item", "approvals")
+            .get(pk=slip_id)
+        )
     except PickingSlip.DoesNotExist:
         log_entry.status = ScanLog.MISMATCH
         log_entry.save()
@@ -118,9 +124,7 @@ def validate_scan(raw_qr_data, scanned_by):
     if slip.status != SlipStatus.APPROVED:
         log_entry.status = ScanLog.EXPIRED
         log_entry.save()
-        raise ValueError(
-            f"This picking slip is {slip.status} and cannot be issued."
-        )
+        raise ValueError(f"This picking slip is {slip.status} and cannot be issued.")
 
     log_entry.status = ScanLog.VALID
     log_entry.save()
@@ -169,6 +173,7 @@ def finalize_issue(slip, store_officer, warehouse):
         )
         # Update EmployeePPE
         from ppe.models import EmployeePPE
+
         try:
             emp_ppe = EmployeePPE.objects.get(
                 employee=slip.employee,
@@ -193,6 +198,7 @@ def finalize_issue(slip, store_officer, warehouse):
     slip.save(update_fields=["status", "issued_by", "issued_at", "updated_at"])
 
     from audit.models import log_action
+
     log_action(
         action="picking_slip_issued",
         entity_type="PickingSlip",

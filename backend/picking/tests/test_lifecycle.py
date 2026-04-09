@@ -42,9 +42,15 @@ class TestPickingSlipLifecycle:
 
     def test_full_create_approve_issue_flow(
         self,
-        employee_client, manager_client, store_client,
-        employee, manager_user, store_user,
-        ppe_item, stock_item, warehouse,
+        employee_client,
+        manager_client,
+        store_client,
+        employee,
+        manager_user,
+        store_user,
+        ppe_item,
+        stock_item,
+        warehouse,
     ):
         # 1. Create slip
         resp = self._create_slip(employee_client, employee, ppe_item)
@@ -106,6 +112,7 @@ class TestPickingSlipLifecycle:
 
     def test_reject_closes_slip(self, manager_client, employee, ppe_item, stock_item):
         from picking.factories import PickingSlipFactory
+
         slip = PickingSlipFactory(employee=employee, status=SlipStatus.PENDING)
         approval = Approval.objects.create(
             picking_slip=slip,
@@ -125,6 +132,7 @@ class TestPickingSlipLifecycle:
 
     def test_finalize_wrong_status_returns_400(self, store_client, employee, ppe_item, warehouse):
         from picking.factories import PickingSlipFactory
+
         slip = PickingSlipFactory(employee=employee, status=SlipStatus.PENDING)
         resp = store_client.post(
             "/api/v1/picking/slips/finalize-issue/",
@@ -144,8 +152,11 @@ class TestPickingSlipLifecycle:
     def test_unauthenticated_cannot_create_slip(self, anon_client, employee, ppe_item):
         resp = anon_client.post(
             "/api/v1/picking/slips/create/",
-            {"employee_id": str(employee.id), "request_type": "expiry",
-             "items": [{"ppe_item_id": str(ppe_item.id), "quantity": 1}]},
+            {
+                "employee_id": str(employee.id),
+                "request_type": "expiry",
+                "items": [{"ppe_item_id": str(ppe_item.id), "quantity": 1}],
+            },
             format="json",
         )
         assert resp.status_code == 401

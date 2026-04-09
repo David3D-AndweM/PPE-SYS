@@ -108,9 +108,7 @@ class MyPPEView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "employee"):
-            return EmployeePPE.objects.filter(
-                employee=user.employee
-            ).select_related("ppe_item")
+            return EmployeePPE.objects.filter(employee=user.employee).select_related("ppe_item")
         return EmployeePPE.objects.none()
 
 

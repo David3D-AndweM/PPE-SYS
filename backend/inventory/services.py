@@ -19,13 +19,10 @@ def deduct_stock(ppe_item, warehouse, quantity, reference_type, reference_id, pe
     Creates an immutable StockMovement record.
     Returns the updated StockItem.
     """
-    stock = StockItem.objects.select_for_update().get(
-        ppe_item=ppe_item, warehouse=warehouse
-    )
+    stock = StockItem.objects.select_for_update().get(ppe_item=ppe_item, warehouse=warehouse)
     if stock.quantity_available < quantity:
         raise ValueError(
-            f"Insufficient stock for {ppe_item.name}: "
-            f"available={stock.quantity_available}, requested={quantity}"
+            f"Insufficient stock for {ppe_item.name}: " f"available={stock.quantity_available}, requested={quantity}"
         )
     stock.quantity_available -= quantity
     stock.save(update_fields=["quantity_available", "updated_at"])
@@ -45,7 +42,10 @@ def deduct_stock(ppe_item, warehouse, quantity, reference_type, reference_id, pe
 
     logger.info(
         "Stock deducted: %s × %s from %s (remaining: %s)",
-        quantity, ppe_item.name, warehouse.name, stock.quantity_available,
+        quantity,
+        ppe_item.name,
+        warehouse.name,
+        stock.quantity_available,
     )
     return stock
 
@@ -77,7 +77,10 @@ def receive_stock(ppe_item, warehouse, quantity, reference_type, reference_id, p
 
     logger.info(
         "Stock received: %s × %s at %s (total: %s)",
-        quantity, ppe_item.name, warehouse.name, stock.quantity_available,
+        quantity,
+        ppe_item.name,
+        warehouse.name,
+        stock.quantity_available,
     )
     return stock
 

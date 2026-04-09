@@ -86,12 +86,8 @@ class PickingSlip(TimeStampedModel):
 
 
 class PickingSlipItem(TimeStampedModel):
-    picking_slip = models.ForeignKey(
-        PickingSlip, on_delete=models.CASCADE, related_name="items"
-    )
-    ppe_item = models.ForeignKey(
-        "ppe.PPEItem", on_delete=models.PROTECT, related_name="slip_items"
-    )
+    picking_slip = models.ForeignKey(PickingSlip, on_delete=models.CASCADE, related_name="items")
+    ppe_item = models.ForeignKey("ppe.PPEItem", on_delete=models.PROTECT, related_name="slip_items")
     quantity = models.PositiveIntegerField(default=1)
     # Set by finalize_issue — which warehouse the stock was pulled from
     warehouse = models.ForeignKey(

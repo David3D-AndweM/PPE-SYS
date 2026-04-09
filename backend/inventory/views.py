@@ -68,6 +68,7 @@ class StockReceiveView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
         from .models import ReferenceType
+
         stock = receive_stock(
             ppe_item=ppe_item,
             warehouse=warehouse,

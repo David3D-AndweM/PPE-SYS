@@ -8,12 +8,14 @@ from channels.testing import WebsocketCommunicator
 
 # Use the inner router (no AllowedHostsOriginValidator) so tests work without a browser origin
 from notifications.routing import websocket_urlpatterns
+
 _test_application = AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
 
 
 def _get_token(user):
     """Get a valid JWT access token for the user."""
     from rest_framework_simplejwt.tokens import AccessToken
+
     return str(AccessToken.for_user(user))
 
 

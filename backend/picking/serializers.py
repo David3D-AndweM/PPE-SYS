@@ -20,22 +20,28 @@ class PickingSlipSerializer(serializers.ModelSerializer):
     employee_name = serializers.CharField(source="employee.user.get_full_name", read_only=True)
     mine_number = serializers.CharField(source="employee.mine_number", read_only=True)
     department_name = serializers.CharField(source="department.name", read_only=True)
-    requested_by_name = serializers.CharField(
-        source="requested_by.get_full_name", read_only=True, default=None
-    )
+    requested_by_name = serializers.CharField(source="requested_by.get_full_name", read_only=True, default=None)
     slip_number = serializers.CharField(read_only=True)
     qr_image = serializers.SerializerMethodField()
 
     class Meta:
         model = PickingSlip
         fields = [
-            "id", "slip_number",
-            "employee", "employee_name", "mine_number",
-            "department", "department_name",
-            "request_type", "status",
-            "requested_by", "requested_by_name",
-            "approved_at", "issued_at",
-            "qr_code", "qr_image",
+            "id",
+            "slip_number",
+            "employee",
+            "employee_name",
+            "mine_number",
+            "department",
+            "department_name",
+            "request_type",
+            "status",
+            "requested_by",
+            "requested_by_name",
+            "approved_at",
+            "issued_at",
+            "qr_code",
+            "qr_image",
             "notes",
             "items",
             "created_at",
@@ -46,6 +52,7 @@ class PickingSlipSerializer(serializers.ModelSerializer):
         if not obj.qr_code:
             return None
         from core.utils.qr import generate_qr_image_base64
+
         return generate_qr_image_base64(obj.qr_code)
 
 
@@ -61,6 +68,7 @@ class CreatePickingSlipSerializer(serializers.Serializer):
 
     def validate_items(self, value):
         from ppe.models import PPEItem
+
         cleaned = []
         for item in value:
             ppe_item_id = item.get("ppe_item_id")
@@ -85,12 +93,9 @@ class FinalizeIssueSerializer(serializers.Serializer):
 
 
 class ScanLogSerializer(serializers.ModelSerializer):
-    scanned_by_name = serializers.CharField(
-        source="scanned_by.get_full_name", read_only=True, default=None
-    )
+    scanned_by_name = serializers.CharField(source="scanned_by.get_full_name", read_only=True, default=None)
 
     class Meta:
         model = ScanLog
-        fields = ["id", "picking_slip", "ppe_item", "scanned_by", "scanned_by_name",
-                  "status", "scan_time", "raw_data"]
+        fields = ["id", "picking_slip", "ppe_item", "scanned_by", "scanned_by_name", "status", "scan_time", "raw_data"]
         read_only_fields = fields

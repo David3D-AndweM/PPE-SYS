@@ -47,6 +47,7 @@ def critical_employee_ppe_expired(db, employee, critical_ppe_item):
 class TestExpiryEngine:
     def _run(self):
         from celery_tasks.expiry_engine import _run_expiry_check_logic
+
         return _run_expiry_check_logic()
 
     def test_marks_expired_ppe(self, employee_ppe_expired):
@@ -63,6 +64,7 @@ class TestExpiryEngine:
 
     def test_already_expired_not_double_counted(self, employee):
         from ppe.factories import EmployeePPEFactory
+
         emp_ppe = EmployeePPEFactory(
             employee=employee,
             status=EmployeePPEStatus.EXPIRED,  # already expired
@@ -90,10 +92,9 @@ class TestExpiryEngine:
             notification_type=NotificationType.EXPIRY,
         ).exists()
 
-    def test_critical_expired_dispatches_admin_notification(
-        self, critical_employee_ppe_expired, admin_user
-    ):
+    def test_critical_expired_dispatches_admin_notification(self, critical_employee_ppe_expired, admin_user):
         from accounts.factories import UserRoleFactory, RoleFactory
+
         # Ensure admin user is on the same site
         site = critical_employee_ppe_expired.employee.department.site
         UserRoleFactory(

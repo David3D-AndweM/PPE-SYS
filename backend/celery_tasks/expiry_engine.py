@@ -24,6 +24,7 @@ def _get_redis_client():
     """Return a redis-py client using the Django cache LOCATION setting."""
     import redis
     from django.conf import settings as s
+
     location = s.CACHES.get("default", {}).get("LOCATION", "redis://localhost:6379/0")
     return redis.from_url(location)
 
@@ -65,6 +66,7 @@ def _run_expiry_check_logic():
     }
 
     from audit.models import log_action
+
     log_action(
         action="expiry_engine_run",
         entity_type="System",
@@ -96,16 +98,12 @@ def _mark_expired(today, chunk_size):
         _notify_expiry(emp_ppe, "expired")
 
         if len(ids_to_update) >= chunk_size:
-            EmployeePPE.objects.filter(id__in=ids_to_update).update(
-                status=EmployeePPEStatus.EXPIRED
-            )
+            EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRED)
             total += len(ids_to_update)
             ids_to_update = []
 
     if ids_to_update:
-        EmployeePPE.objects.filter(id__in=ids_to_update).update(
-            status=EmployeePPEStatus.EXPIRED
-        )
+        EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRED)
         total += len(ids_to_update)
 
     return total
@@ -139,16 +137,12 @@ def _mark_expiring_soon(today, chunk_size):
         _notify_expiry(emp_ppe, "expiring_soon")
 
         if len(ids_to_update) >= chunk_size:
-            EmployeePPE.objects.filter(id__in=ids_to_update).update(
-                status=EmployeePPEStatus.EXPIRING_SOON
-            )
+            EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRING_SOON)
             total += len(ids_to_update)
             ids_to_update = []
 
     if ids_to_update:
-        EmployeePPE.objects.filter(id__in=ids_to_update).update(
-            status=EmployeePPEStatus.EXPIRING_SOON
-        )
+        EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRING_SOON)
         total += len(ids_to_update)
 
     return total
@@ -176,10 +170,7 @@ def _notify_expiry(emp_ppe, event_type):
         else:
             days_remaining = (emp_ppe.expiry_date - date.today()).days
             title = f"PPE Expiring Soon: {ppe_name}"
-            message = (
-                f"Your {ppe_name} expires on {emp_ppe.expiry_date} "
-                f"({days_remaining} day(s) remaining)."
-            )
+            message = f"Your {ppe_name} expires on {emp_ppe.expiry_date} " f"({days_remaining} day(s) remaining)."
 
         # Notify employee
         dispatch(

@@ -12,9 +12,14 @@ class PPEItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPEItem
         fields = [
-            "id", "name", "category", "description",
-            "is_critical", "default_validity_days",
-            "requires_serial_tracking", "is_active",
+            "id",
+            "name",
+            "category",
+            "description",
+            "is_critical",
+            "default_validity_days",
+            "requires_serial_tracking",
+            "is_active",
         ]
         read_only_fields = ["id"]
 
@@ -25,10 +30,15 @@ class PPEConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPEConfiguration
         fields = [
-            "id", "ppe_item", "ppe_item_name",
-            "scope_type", "scope_id",
-            "validity_days", "grace_days",
-            "requires_approval", "approval_levels",
+            "id",
+            "ppe_item",
+            "ppe_item_name",
+            "scope_type",
+            "scope_id",
+            "validity_days",
+            "grace_days",
+            "requires_approval",
+            "approval_levels",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
@@ -41,9 +51,13 @@ class DepartmentPPERequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = DepartmentPPERequirement
         fields = [
-            "id", "department", "department_name",
-            "ppe_item", "ppe_item_name",
-            "is_required", "quantity",
+            "id",
+            "department",
+            "department_name",
+            "ppe_item",
+            "ppe_item_name",
+            "is_required",
+            "quantity",
         ]
         read_only_fields = ["id"]
 
@@ -58,10 +72,20 @@ class EmployeePPESerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeePPE
         fields = [
-            "id", "employee", "employee_name", "mine_number",
-            "ppe_item", "ppe_item_name", "ppe_item_category", "is_critical",
-            "issue_date", "expiry_date", "status",
-            "last_inspection_date", "condition_status",
-            "serial_number", "notes",
+            "id",
+            "employee",
+            "employee_name",
+            "mine_number",
+            "ppe_item",
+            "ppe_item_name",
+            "ppe_item_category",
+            "is_critical",
+            "issue_date",
+            "expiry_date",
+            "status",
+            "last_inspection_date",
+            "condition_status",
+            "serial_number",
+            "notes",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
