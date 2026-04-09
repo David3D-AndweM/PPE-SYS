@@ -12,4 +12,4 @@ faker==25.*
 # Code quality
 black==24.*
 flake8==7.*
-isort==5.*
+isort
