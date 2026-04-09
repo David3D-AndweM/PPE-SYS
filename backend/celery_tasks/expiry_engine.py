@@ -20,15 +20,22 @@ LOCK_KEY = "ppe:expiry_engine:lock"
 LOCK_TTL = 3600  # 1 hour — task should never take this long
 
 
+def _get_redis_client():
+    """Return a redis-py client using the Django cache LOCATION setting."""
+    import redis
+    from django.conf import settings as s
+    location = s.CACHES.get("default", {}).get("LOCATION", "redis://localhost:6379/0")
+    return redis.from_url(location)
+
+
 @shared_task(name="celery_tasks.expiry_engine.run_expiry_check", bind=True, max_retries=0)
 def run_expiry_check(self):
     """
     Main expiry engine task. Acquires a Redis lock before processing.
     """
-    from django.core.cache import cache
-
-    lock = cache.lock(LOCK_KEY, timeout=LOCK_TTL)
-    if not lock.acquire(blocking=False):
+    client = _get_redis_client()
+    acquired = client.set(LOCK_KEY, "1", ex=LOCK_TTL, nx=True)
+    if not acquired:
         logger.warning("Expiry engine already running — skipping this run")
         return {"status": "skipped", "reason": "lock_held"}
 
@@ -36,7 +43,7 @@ def run_expiry_check(self):
         return _run_expiry_check_logic()
     finally:
         try:
-            lock.release()
+            client.delete(LOCK_KEY)
         except Exception:
             pass
 

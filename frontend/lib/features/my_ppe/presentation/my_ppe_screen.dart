@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/auth/auth_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ppe_status_badge.dart';
 import '../../../injection.dart';
@@ -46,16 +44,10 @@ class _MyPpeScreenState extends State<MyPpeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.read<AuthBloc>().state as AuthAuthenticated;
     return Scaffold(
       appBar: AppBar(
         title: const Text('My PPE'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.push('/notifications'),
-          ),
-        ],
+        actions: const [],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/my-ppe/slips/create'),

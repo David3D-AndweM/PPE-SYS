@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -59,6 +59,18 @@ class DepartmentPPERequirementListCreateView(ListCreateAPIView):
         if dept:
             qs = qs.filter(department_id=dept)
         return qs
+
+
+class PPEConfigurationDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = PPEConfiguration.objects.select_related("ppe_item").all()
+    serializer_class = PPEConfigurationSerializer
+    permission_classes = [IsAdmin]
+
+
+class DepartmentPPERequirementDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = DepartmentPPERequirement.objects.select_related("department", "ppe_item").all()
+    serializer_class = DepartmentPPERequirementSerializer
+    permission_classes = [IsAdminOrManager]
 
 
 class EmployeePPEListView(ListAPIView):

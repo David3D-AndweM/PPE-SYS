@@ -26,5 +26,5 @@ void setupDependencies() {
   sl.registerLazySingleton<NotificationsRepository>(() => NotificationsRepository(sl()));
 
   // BLoCs
-  sl.registerFactory<AuthBloc>(() => AuthBloc(sl(), sl()));
+  sl.registerFactory<AuthBloc>(() => AuthBloc(sl(), sl(), sl()));
 }

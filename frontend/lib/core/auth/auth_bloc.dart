@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../api/api_client.dart';
 import '../api/endpoints.dart';
+import '../websocket/ws_service.dart';
 import 'token_storage.dart';
 
 // --- Events ---
@@ -79,8 +80,9 @@ class AuthError extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final TokenStorage _storage;
   final ApiClient _api;
+  final WsService _ws;
 
-  AuthBloc(this._storage, this._api) : super(AuthInitial()) {
+  AuthBloc(this._storage, this._api, this._ws) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
@@ -121,6 +123,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final refresh = data['refresh'] as String;
       await _storage.saveTokens(accessToken: access, refreshToken: refresh);
       emit(_stateFromToken(access));
+      _ws.connect();
     } catch (e) {
       emit(AuthError(_parseError(e)));
     }
@@ -130,6 +133,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    await _ws.disconnect();
+    _ws.unreadPushCount.value = 0;
     await _storage.clearTokens();
     emit(AuthUnauthenticated());
   }

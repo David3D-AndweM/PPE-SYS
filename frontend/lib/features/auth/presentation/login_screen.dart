@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../core/auth/auth_bloc.dart';
+import '../../../core/config/app_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +17,94 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
+
+  void _showServerPicker() {
+    final config = AppConfig.instance;
+    final customApiCtrl = TextEditingController(text: config.apiBaseUrl);
+    final customWsCtrl = TextEditingController(text: config.wsBaseUrl);
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          title: const Text('Select Server'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _serverTile(ctx, setS, ServerEnv.local, 'Local (this machine)',
+                  'http://localhost/api/v1', config),
+              _serverTile(ctx, setS, ServerEnv.network, 'Network / Deployed',
+                  _dotenvUrl, config),
+              const Divider(),
+              _serverTile(ctx, setS, ServerEnv.custom, 'Custom URL', '', config),
+              if (config.env == ServerEnv.custom) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: customApiCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'API base URL',
+                    hintText: 'http://192.168.x.x/api/v1',
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: customWsCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'WebSocket base URL',
+                    hintText: 'ws://192.168.x.x/ws',
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (config.env == ServerEnv.custom) {
+                  config.switchTo(
+                    ServerEnv.custom,
+                    customApi: customApiCtrl.text.trim(),
+                    customWs: customWsCtrl.text.trim(),
+                  );
+                }
+                Navigator.pop(ctx);
+                setState(() {});
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String get _dotenvUrl =>
+      dotenv.env['API_BASE_URL'] ?? 'set API_BASE_URL in .env';
+
+  Widget _serverTile(BuildContext ctx, StateSetter setS, ServerEnv env,
+      String label, String subtitle, AppConfig config) {
+    final selected = config.env == env;
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: selected ? Theme.of(ctx).colorScheme.primary : Colors.grey,
+      ),
+      title: Text(label),
+      subtitle: Text(subtitle,
+          style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      onTap: () {
+        config.switchTo(env);
+        setS(() {});
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -108,6 +198,41 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 48),
+                    // Server selector
+                    GestureDetector(
+                      onTap: _showServerPicker,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              AppConfig.instance.env == ServerEnv.local
+                                  ? Icons.computer
+                                  : Icons.cloud_outlined,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              AppConfig.instance.label,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.expand_more,
+                                size: 14, color: Colors.grey.shade600),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

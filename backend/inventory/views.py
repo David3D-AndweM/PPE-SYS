@@ -29,6 +29,12 @@ class WarehouseListCreateView(ListCreateAPIView):
         return qs
 
 
+class WarehouseDetailView(RetrieveUpdateAPIView):
+    queryset = Warehouse.objects.select_related("site").all()
+    serializer_class = WarehouseSerializer
+    permission_classes = [IsAdmin | IsStoreOfficer]
+
+
 class StockItemListView(ListAPIView):
     queryset = StockItem.objects.select_related("ppe_item", "warehouse__site")
     serializer_class = StockItemSerializer
