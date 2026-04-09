@@ -1,6 +1,7 @@
 """
 Approval workflow tests — role enforcement, approve/reject propagation.
 """
+
 import pytest
 
 from approvals.models import Approval, ApprovalStatus

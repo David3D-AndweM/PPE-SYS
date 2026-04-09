@@ -1,6 +1,7 @@
 """
 Root-level pytest fixtures shared across all apps.
 """
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -8,7 +9,6 @@ from accounts.factories import RoleFactory, UserFactory, UserRoleFactory
 from inventory.factories import StockItemFactory, WarehouseFactory
 from organization.factories import DepartmentFactory, EmployeeFactory, SiteFactory
 from ppe.factories import EmployeePPEFactory, PPEItemFactory
-
 
 # ─── Roles (seeded once, get_or_create) ─────────────────────────────────────
 

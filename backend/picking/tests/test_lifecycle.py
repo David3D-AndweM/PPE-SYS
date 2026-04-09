@@ -2,6 +2,7 @@
 Full picking slip lifecycle integration test.
 Covers: create → approve → validate-scan → finalize-issue.
 """
+
 import pytest
 
 from approvals.models import Approval, ApprovalStatus

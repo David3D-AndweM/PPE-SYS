@@ -2,6 +2,7 @@
 Expiry engine tests — marks expired/expiring PPE, sends notifications,
 respects Redis lock.
 """
+
 from datetime import date, timedelta
 
 import pytest

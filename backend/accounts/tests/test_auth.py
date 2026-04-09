@@ -1,6 +1,7 @@
 """
 Auth endpoint tests — login, JWT claims, token refresh, change password.
 """
+
 import pytest
 from rest_framework.test import APIClient
 

@@ -1,6 +1,7 @@
 """
 WebSocket consumer tests — authentication, connection, message delivery.
 """
+
 import pytest
 from channels.auth import AuthMiddlewareStack
 from channels.routing import URLRouter
