@@ -1,0 +1,61 @@
+name: ppe_system
+description: Enterprise PPE Compliance & Issuing Platform — mobile client
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^8.1.5
+  equatable: ^2.0.5
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # HTTP
+  dio: ^5.4.3
+
+  # Secure storage for JWT tokens
+  flutter_secure_storage: ^9.2.2
+
+  # WebSocket
+  web_socket_channel: ^3.0.1
+
+  # QR scanning
+  mobile_scanner: ^5.2.3
+
+  # Image display
+  cached_network_image: ^3.3.1
+
+  # Dependency injection
+  get_it: ^8.0.2
+
+  # Code generation support (annotations)
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Date formatting
+  intl: ^0.19.0
+
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.9
+  freezed: ^2.4.7
+  json_serializable: ^6.8.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env

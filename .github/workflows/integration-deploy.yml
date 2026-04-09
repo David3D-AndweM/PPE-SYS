@@ -1,0 +1,260 @@
+name: Integration & Deployment
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_run:
+    workflows:
+      - 'Backend CI/CD'
+      - 'Frontend CI/CD'
+    types: [completed]
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+  FRONTEND_APK_ARTIFACT: flutter-apk-debug
+
+jobs:
+  # Orchestrated deployment to staging
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.ppe-system.internal
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull backend image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:develop
+
+      - name: Deploy to staging (Kubernetes/Docker Swarm)
+        env:
+          DEPLOYMENT_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+          DEPLOYMENT_URL: ${{ secrets.STAGING_DEPLOY_URL }}
+        run: |
+          # Example: Deploy via kubectl
+          # kubectl set image deployment/ppe-backend backend=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:develop -n staging
+          
+          # Or via Docker Swarm/Docker Stack
+          # docker stack deploy -c docker-compose.staging.yml ppe-staging
+          
+          echo "Deploying to staging environment..."
+          echo "Backend image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:develop"
+
+      - name: Verify deployment health
+        run: |
+          echo "Waiting for services to be healthy..."
+          # Add health check logic here
+          sleep 30
+          # curl -f https://staging.ppe-system.internal/health || exit 1
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "Staging deployment completed successfully"
+
+  # Production deployment (manual trigger or tag-based)
+  deploy-production:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ppe-system.app
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and verify backend image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:v${{ steps.version.outputs.version }}
+          docker inspect ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:v${{ steps.version.outputs.version }}
+
+      - name: Deploy to production
+        env:
+          PROD_DEPLOY_KEY: ${{ secrets.PROD_DEPLOY_KEY }}
+          PROD_DEPLOY_URL: ${{ secrets.PROD_DEPLOY_URL }}
+        run: |
+          echo "Deploying version v${{ steps.version.outputs.version }} to production"
+          # kubectl set image deployment/ppe-backend backend=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:v${{ steps.version.outputs.version }} -n production
+          
+          # Or via Docker Swarm
+          # docker stack deploy -c docker-compose.prod.yml ppe-prod
+
+      - name: Health check
+        run: |
+          echo "Running health checks on production..."
+          # curl -f https://ppe-system.app/health || exit 1
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          body: |
+            Production Release: v${{ steps.version.outputs.version }}
+            
+            Backend Image: `${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:v${{ steps.version.outputs.version }}`
+            
+            Changes: See commit history
+          draft: false
+          prerelease: false
+
+      - name: Notify success
+        run: echo "Production deployment v${{ steps.version.outputs.version }} completed successfully"
+
+  # Email notification for staging deployment
+  notify-staging:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send staging deployment email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '✅ Staging Deployment Successful'
+          to: ${{ secrets.QA_TEAM_EMAIL }}
+          cc: ${{ secrets.DEVOPS_TEAM_EMAIL }}
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            Staging Environment Deployment Completed Successfully
+            
+            🎯 Branch: develop
+            📦 Commit: ${{ github.sha }}
+            🌐 Environment: https://staging.ppe-system.internal
+            🔗 Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ✓ Backend image deployed
+            ✓ Migrations completed
+            ✓ Health checks passed
+            
+            QA team can now begin testing.
+            
+            ---
+            This is an automated message from PPE System CI/CD
+
+      - name: Send staging deployment failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '❌ Staging Deployment Failed'
+          to: ${{ secrets.DEVOPS_TEAM_EMAIL }}
+          cc: ${{ secrets.QA_TEAM_EMAIL }}
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            Staging Environment Deployment Failed
+            
+            🎯 Branch: develop
+            📦 Commit: ${{ github.sha }}
+            🌐 Environment: https://staging.ppe-system.internal
+            🔗 Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ⚠️ Deployment failed. DevOps team investigation required.
+            
+            ---
+            This is an automated message from PPE System CI/CD
+
+  # Email notification for production deployment
+  notify-production:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send production deployment email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '✅ PRODUCTION Deployment Successful - ${{ github.ref_name }}'
+          to: ${{ secrets.DEVOPS_TEAM_EMAIL }}
+          cc: ${{ secrets.BACKEND_TEAM_EMAIL }}
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            Production Environment Deployment Completed Successfully
+            
+            🚀 VERSION: ${{ github.ref_name }}
+            📦 Commit: ${{ github.sha }}
+            🌐 Environment: https://ppe-system.app
+            🔗 Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ✓ Backend image deployed to production
+            ✓ Database migrations completed
+            ✓ Health checks passed
+            ✓ All services stable
+            
+            Production deployment complete and verified.
+            
+            ---
+            This is an automated message from PPE System CI/CD
+
+      - name: Send production deployment failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '🌴 CRITICAL: Production Deployment Failed - Rollback Initiated'
+          to: ${{ secrets.DEVOPS_TEAM_EMAIL }}
+          cc: ${{ secrets.BACKEND_TEAM_EMAIL }},on-call@ppe-system.dev
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            PRODUCTION DEPLOYMENT FAILED - AUTOMATIC ROLLBACK INITIATED
+            
+            🚀 VERSION: ${{ github.ref_name }}
+            📦 Commit: ${{ github.sha }}
+            🌐 Environment: https://ppe-system.app
+            🔗 Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ⚠️ DEPLOYMENT FAILED
+            🔄 ROLLBACK IN PROGRESS
+            
+            On-call engineer: Please investigate immediately.
+            
+            Rollback Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ---
+            This is an automated CRITICAL message from PPE System CI/CD

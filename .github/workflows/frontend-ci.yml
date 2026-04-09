@@ -1,0 +1,207 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/frontend
+
+jobs:
+  # Flutter analysis and testing
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'latest'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Run Flutter analyzer
+        run: |
+          cd frontend
+          flutter analyze
+
+      - name: Run Flutter tests
+        run: |
+          cd frontend
+          flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  # Security scanning for Flutter
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'frontend'
+          format: 'sarif'
+          output: 'trivy-frontend.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-frontend.sarif'
+          category: 'Trivy-Frontend'
+
+  # Build APK for testing
+  build-apk:
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'latest'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Build APK (debug)
+        run: |
+          cd frontend
+          flutter build apk --debug --no-tree-shake-icons
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-apk-debug
+          path: frontend/build/app/outputs/flutter-app-debug.apk
+          retention-days: 30
+
+  # Build iOS (macOS only)
+  build-ios:
+    needs: [test, security]
+    runs-on: macos-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'latest'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Build iOS (debug)
+        run: |
+          cd frontend
+          flutter build ios --debug --no-codesign
+
+      - name: Upload iOS build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-ios-debug
+          path: frontend/build/ios
+          retention-days: 30
+
+  # Notify deployment status via email
+  notify:
+    needs: [build-apk, build-ios]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send email on success
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '✅ Frontend Pipeline Success - ${{ github.ref_name }}'
+          to: ${{ secrets.FRONTEND_TEAM_EMAIL }}
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            Frontend CI/CD Pipeline Completed Successfully
+            
+            🎯 Branch: ${{ github.ref_name }}
+            📦 Commit: ${{ github.sha }}
+            👤 Author: ${{ github.actor }}
+            🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ✓ Tests passed
+            ✓ Security scan passed
+            ✓ APK built successfully
+            ✓ iOS framework built successfully
+            
+            Build Artifacts:
+            - APK: Check GitHub Actions artifacts (30-day retention)
+            - iOS: Check GitHub Actions artifacts (30-day retention)
+            
+            ---
+            This is an automated message from PPE System CI/CD
+
+      - name: Send email on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '❌ Frontend Pipeline Failed - ${{ github.ref_name }}'
+          to: ${{ secrets.FRONTEND_TEAM_EMAIL }}
+          cc: ${{ secrets.DEVOPS_TEAM_EMAIL }}
+          from: 'GitHub Actions <noreply@ppe-system.dev>'
+          body: |
+            Frontend CI/CD Pipeline Failed
+            
+            🎯 Branch: ${{ github.ref_name }}
+            📦 Commit: ${{ github.sha }}
+            👤 Author: ${{ github.actor }}
+            🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ⚠️ Pipeline Status: FAILED
+            
+            Please check the GitHub Actions logs for detailed error information.
+            
+            Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ---
+            This is an automated message from PPE System CI/CD

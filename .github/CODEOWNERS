@@ -1,0 +1,22 @@
+name: Repository Structure & Best Practices
+description: Guidelines for maintaining PPE System CI/CD
+
+# CODEOWNERS for code review enforcement
+# This file assigns automatic reviewers to PRs modifying certain paths
+
+# Backend changes require backend team
+backend/** @backend-team
+
+# Frontend changes require frontend team
+frontend/** @frontend-team
+
+# CI/CD changes require DevOps lead approval
+.github/workflows/** @devops-lead
+
+# Infrastructure as Code (if present)
+infrastructure/** @devops-lead
+kubernetes/** @devops-lead
+
+# Documentation changes
+*.md @maintainers
+docs/** @maintainers

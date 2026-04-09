@@ -1,0 +1,95 @@
+[
+  {
+    "model": "picking.pickingslip",
+    "pk": "90000000-0000-0000-0000-000000000001",
+    "fields": {
+      "employee": "50000000-0000-0000-0000-000000000001",
+      "department": "13000000-0000-0000-0000-000000000001",
+      "request_type": "expiry",
+      "status": "pending",
+      "requested_by": "40000000-0000-0000-0000-000000000001",
+      "approved_by": null,
+      "issued_by": null,
+      "approved_at": null,
+      "issued_at": null,
+      "qr_code": "DEMO_QR_PENDING_SLIP_001",
+      "notes": "SCSR expired — urgent replacement required",
+      "created_at": "2026-04-08T08:30:00Z",
+      "updated_at": "2026-04-08T08:30:00Z"
+    }
+  },
+  {
+    "model": "picking.pickingslipitem",
+    "pk": "91000000-0000-0000-0000-000000000001",
+    "fields": {
+      "picking_slip": "90000000-0000-0000-0000-000000000001",
+      "ppe_item": "20000000-0000-0000-0000-000000000008",
+      "quantity": 1,
+      "warehouse": null,
+      "created_at": "2026-04-08T08:30:00Z",
+      "updated_at": "2026-04-08T08:30:00Z"
+    }
+  },
+  {
+    "model": "picking.pickingslip",
+    "pk": "90000000-0000-0000-0000-000000000002",
+    "fields": {
+      "employee": "50000000-0000-0000-0000-000000000001",
+      "department": "13000000-0000-0000-0000-000000000001",
+      "request_type": "expiry",
+      "status": "pending",
+      "requested_by": "40000000-0000-0000-0000-000000000001",
+      "approved_by": null,
+      "issued_by": null,
+      "approved_at": null,
+      "issued_at": null,
+      "qr_code": "DEMO_QR_PENDING_SLIP_002",
+      "notes": "Respirator expiring in 5 days",
+      "created_at": "2026-04-09T07:00:00Z",
+      "updated_at": "2026-04-09T07:00:00Z"
+    }
+  },
+  {
+    "model": "picking.pickingslipitem",
+    "pk": "91000000-0000-0000-0000-000000000002",
+    "fields": {
+      "picking_slip": "90000000-0000-0000-0000-000000000002",
+      "ppe_item": "20000000-0000-0000-0000-000000000003",
+      "quantity": 1,
+      "warehouse": null,
+      "created_at": "2026-04-09T07:00:00Z",
+      "updated_at": "2026-04-09T07:00:00Z"
+    }
+  },
+  {
+    "model": "picking.pickingslip",
+    "pk": "90000000-0000-0000-0000-000000000003",
+    "fields": {
+      "employee": "50000000-0000-0000-0000-000000000002",
+      "department": "13000000-0000-0000-0000-000000000001",
+      "request_type": "new",
+      "status": "approved",
+      "requested_by": "40000000-0000-0000-0000-000000000001",
+      "approved_by": "40000000-0000-0000-0000-000000000001",
+      "issued_by": null,
+      "approved_at": "2026-04-08T14:00:00Z",
+      "issued_at": null,
+      "qr_code": "eyJzbGlwX2lkIjogIjkwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMyIsICJ2IjogMX18DEMO_APPROVED",
+      "notes": "First issue — new employee onboarding",
+      "created_at": "2026-04-07T09:00:00Z",
+      "updated_at": "2026-04-08T14:00:00Z"
+    }
+  },
+  {
+    "model": "picking.pickingslipitem",
+    "pk": "91000000-0000-0000-0000-000000000003",
+    "fields": {
+      "picking_slip": "90000000-0000-0000-0000-000000000003",
+      "ppe_item": "20000000-0000-0000-0000-000000000003",
+      "quantity": 1,
+      "warehouse": "30000000-0000-0000-0000-000000000001",
+      "created_at": "2026-04-07T09:00:00Z",
+      "updated_at": "2026-04-07T09:00:00Z"
+    }
+  }
+]

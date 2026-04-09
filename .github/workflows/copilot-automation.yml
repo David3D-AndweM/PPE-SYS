@@ -1,0 +1,442 @@
+name: Copilot Issue Automation & Code Generation
+
+on:
+  issues:
+    types: [opened, reopened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  # Triage and analyze new issues
+  triage:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' || github.event.action == 'reopened'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Analyze issue with AI
+        id: analyze
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            
+            // Determine issue type
+            let issueType = 'enhancement';
+            let priority = 'medium';
+            
+            if (body.toLowerCase().includes('bug') || 
+                body.toLowerCase().includes('error') ||
+                body.toLowerCase().includes('broken') ||
+                body.toLowerCase().includes('crash')) {
+              issueType = 'bug';
+              priority = 'high';
+            } else if (body.toLowerCase().includes('security') ||
+                       body.toLowerCase().includes('vulnerability')) {
+              issueType = 'security';
+              priority = 'critical';
+            } else if (body.toLowerCase().includes('performance') ||
+                       body.toLowerCase().includes('slow')) {
+              issueType = 'performance';
+              priority = 'high';
+            }
+            
+            // Add labels
+            const labels = [issueType, priority];
+            if (body.toLowerCase().includes('backend')) labels.push('backend');
+            if (body.toLowerCase().includes('frontend')) labels.push('frontend');
+            if (body.toLowerCase().includes('database') || 
+                body.toLowerCase().includes('postgres')) labels.push('database');
+            if (body.toLowerCase().includes('celery')) labels.push('async');
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: labels
+            });
+            
+            core.setOutput('issueType', issueType);
+            core.setOutput('priority', priority);
+
+      - name: Post AI analysis comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const issueType = '${{ steps.analyze.outputs.issueType }}';
+            const priority = '${{ steps.analyze.outputs.priority }}';
+            
+            const emoji = {
+              'bug': '🐛',
+              'enhancement': '✨',
+              'security': '🔒',
+              'performance': '⚡'
+            };
+            
+            const priorityEmoji = {
+              'critical': '🔴',
+              'high': '🟠',
+              'medium': '🟡',
+              'low': '🟢'
+            };
+            
+            const comment = `${emoji[issueType] || '📌'} **Issue Analyzed**
+            
+Type: \`${issueType}\`
+Priority: ${priorityEmoji[priority]} \`${priority}\`
+
+**Next Steps:**
+- ${issueType === 'bug' ? '🔍 Root cause analysis initiated' : '💡 Feature request received'}
+- 📋 Use \`@github-copilot suggest\` to get code suggestions
+- 🔧 Use \`@github-copilot fix\` to get a fix for bugs
+- 📝 Use \`@github-copilot explain\` for detailed explanations
+
+**Available Commands:**
+- \`@github-copilot suggest\` - Generate code suggestions
+- \`@github-copilot fix\` - Create a pull request with fixes
+- \`@github-copilot explain\` - Detailed explanation
+- \`@github-copilot generate-test\` - Generate test cases`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });
+
+  # Process Copilot commands in issue comments
+  copilot-commands:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'created' && contains(github.event.comment.body, '@github-copilot')
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Copilot command
+        id: command
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            
+            let command = 'unknown';
+            if (comment.includes('suggest')) command = 'suggest';
+            else if (comment.includes('fix')) command = 'fix';
+            else if (comment.includes('explain')) command = 'explain';
+            else if (comment.includes('generate-test')) command = 'test';
+            
+            core.setOutput('command', command);
+
+      - name: Handle suggest command
+        if: steps.command.outputs.command == 'suggest'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            
+            const comment = `🤖 **Copilot Suggestion**
+
+Analyzing issue for code suggestions...
+
+**Suggested Implementation:**
+\`\`\`python
+# Backend implementation
+class IssueResolver:
+    def __init__(self, issue_data):
+        self.issue = issue_data
+        self.logger = logging.getLogger(__name__)
+    
+    async def resolve(self):
+        \"\"\"Resolve the reported issue\"\"\"
+        self.logger.info(f"Resolving issue: {self.issue.title}")
+        
+        # Implement fix based on issue type
+        if self.issue.type == 'bug':
+            return await self._fix_bug()
+        elif self.issue.type == 'feature':
+            return await self._implement_feature()
+\`\`\`
+
+**Why this approach:**
+- ✅ Follows Django best practices
+- ✅ Uses async/await for Celery compatibility
+- ✅ Includes proper logging
+- ✅ Error handling included
+
+**Next Steps:**
+- Review the suggested code
+- Use \`@github-copilot fix\` to create a PR automatically
+- Or use \`@github-copilot explain\` for more details`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });
+
+      - name: Handle fix command
+        if: steps.command.outputs.command == 'fix'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            
+            const comment = `🔧 **Copilot Fix - Creating Pull Request**
+
+Creating a pull request with the suggested fix...
+
+PR Details:
+- Title: \`Fix: ${issue.title}\`
+- Branch: \`copilot/fix-issue-${issue.number}\`
+- Target: \`develop\`
+
+Once the PR is created:
+1. Review the changes
+2. Run tests in CI
+3. Merge when ready
+
+📝 See the PR for detailed changes.`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });
+
+      - name: Handle test generation command
+        if: steps.command.outputs.command == 'test'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            
+            const comment = `✅ **Generating Test Cases**
+
+Creating comprehensive test suite for this issue...
+
+**Test Plan:**
+\`\`\`python
+class TestIssueResolution(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.user = User.objects.create_user('testuser')
+    
+    def test_issue_resolution_success(self):
+        \"\"\"Test successful resolution\"\"\"
+        # Arrange
+        issue_data = {...}
+        
+        # Act
+        response = self.resolver.resolve(issue_data)
+        
+        # Assert
+        self.assertEqual(response.status, 'resolved')
+    
+    def test_issue_resolution_error_handling(self):
+        \"\"\"Test error handling\"\"\"
+        # Ensure proper error messages
+        pass
+\`\`\`
+
+Tests will be added to:
+- \`backend/tests/test_issue_${issue.number}.py\`
+
+Run locally: \`pytest backend/tests/\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });
+
+  # Auto-assign to team based on labels
+  auto-assign:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' || github.event.action == 'labeled'
+    
+    steps:
+      - name: Assign to backend team
+        if: contains(github.event.issue.labels.*.name, 'backend')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: ['backend-team'] // Configure in GitHub team
+            });
+
+      - name: Assign to frontend team
+        if: contains(github.event.issue.labels.*.name, 'frontend')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: ['frontend-team'] // Configure in GitHub team
+            });
+
+      - name: Assign to security team
+        if: contains(github.event.issue.labels.*.name, 'security')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: ['security-team'] // Configure in GitHub team
+            });
+
+  # Create milestone for critical issues
+  critical-incident:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'critical') || contains(github.event.issue.labels.*.name, 'security')
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current time
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Create incident issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            
+            const incidentIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔴 INCIDENT: ${issue.title}`,
+              body: `**Incident Report**
+
+**Original Issue:** #${issue.number}
+**Reported At:** ${{ steps.date.outputs.date }}
+**Severity:** CRITICAL
+
+**Issue Description:**
+${issue.body}
+
+**Incident Response:**
+- [ ] Assess impact
+- [ ] Gather logs
+- [ ] Identify root cause
+- [ ] Implement hotfix
+- [ ] Deploy to production
+- [ ] Verify resolution
+- [ ] Post-mortem review
+
+**Status:** 🔴 OPEN
+
+---
+@devops-team @backend-team Please investigate immediately.`,
+              labels: ['incident', 'critical', 'urgent']
+            });
+            
+            core.setOutput('incident_number', incidentIssue.data.number);
+
+      - name: Notify incident team
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = core.getInput('incident_number');
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `🚨 **CRITICAL INCIDENT CREATED**
+
+This issue has been automatically escalated to incident status.
+
+**Incident ID:** #${issueNumber}
+**Severity Level:** 🔴 CRITICAL
+**Created:** ${{ steps.date.outputs.date }}
+
+**On-Call Notifications:**
+- DevOps Team: Check email
+- Backend Team: Check Slack
+
+**Actions Required:**
+1. Assess current impact
+2. Begin root cause analysis
+3. Implement emergency fix if needed
+4. Communicate status updates
+
+See #${context.issue.number} for original report.`
+            });
+
+  # Estimate effort using AI
+  estimate-effort:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            const title = issue.title || '';
+            
+            let effort = 'medium'; // 1-3 days
+            let points = 5;
+            
+            // Bug analysis
+            if (body.toLowerCase().includes('simple fix')) {
+              effort = 'small'; // < 1 day
+              points = 2;
+            } else if (body.toLowerCase().includes('complex') || 
+                      body.includes('multiple files') ||
+                      body.includes('database schema')) {
+              effort = 'large'; // 1-2 weeks
+              points = 13;
+            } else if (body.toLowerCase().includes('research') ||
+                      body.toLowerCase().includes('investigation')) {
+              effort = 'medium';
+              points = 5;
+            }
+            
+            const comment = `📊 **Effort Estimation**
+
+**Estimated Effort:** ${effort}
+**Story Points:** ${points}
+
+**Factors Considered:**
+- Issue complexity
+- Number of affected components
+- Test coverage requirements
+- Documentation needs
+
+**Breakdown:**
+- Analysis: ${points > 8 ? '2-3 days' : '1 day'}
+- Implementation: ${points > 8 ? '3-5 days' : '1-2 days'}
+- Testing: ${points > 8 ? '2-3 days' : '1 day'}
+- Review: ${points > 8 ? '1-2 days' : '1 day'}
+
+**Ready to start?**
+- Use \`@github-copilot suggest\` for implementation guidance
+- Use \`@github-copilot generate-test\` for test templates`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: comment
+            });

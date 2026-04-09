@@ -1,0 +1,98 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000001",
+    "fields": {
+      "email": "manager1@auricmines.com",
+      "first_name": "James",
+      "last_name": "Mokoena",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-01-15T08:00:00Z",
+      "created_at": "2024-01-15T08:00:00Z",
+      "updated_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000002",
+    "fields": {
+      "email": "safety1@auricmines.com",
+      "first_name": "Priya",
+      "last_name": "Naidoo",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-01-15T08:00:00Z",
+      "created_at": "2024-01-15T08:00:00Z",
+      "updated_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000003",
+    "fields": {
+      "email": "store1@auricmines.com",
+      "first_name": "Thabo",
+      "last_name": "Dlamini",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-01-15T08:00:00Z",
+      "created_at": "2024-01-15T08:00:00Z",
+      "updated_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000004",
+    "fields": {
+      "email": "emp001@auricmines.com",
+      "first_name": "Sipho",
+      "last_name": "Khumalo",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-02-01T07:00:00Z",
+      "created_at": "2024-02-01T07:00:00Z",
+      "updated_at": "2024-02-01T07:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000005",
+    "fields": {
+      "email": "emp002@auricmines.com",
+      "first_name": "Lindiwe",
+      "last_name": "Zulu",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-02-01T07:00:00Z",
+      "created_at": "2024-02-01T07:00:00Z",
+      "updated_at": "2024-02-01T07:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000006",
+    "fields": {
+      "email": "emp003@auricmines.com",
+      "first_name": "Bongani",
+      "last_name": "Sithole",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-03-10T07:00:00Z",
+      "created_at": "2024-03-10T07:00:00Z",
+      "updated_at": "2024-03-10T07:00:00Z"
+    }
+  }
+]

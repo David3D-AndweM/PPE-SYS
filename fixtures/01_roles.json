@@ -1,0 +1,7 @@
+[
+  {"model": "accounts.role", "pk": "00000000-0000-0000-0000-000000000001", "fields": {"name": "Admin", "description": "System administrator with full access."}},
+  {"model": "accounts.role", "pk": "00000000-0000-0000-0000-000000000002", "fields": {"name": "Manager", "description": "Department manager who approves PPE requests."}},
+  {"model": "accounts.role", "pk": "00000000-0000-0000-0000-000000000003", "fields": {"name": "Safety", "description": "Safety officer who validates compliance and co-approves critical items."}},
+  {"model": "accounts.role", "pk": "00000000-0000-0000-0000-000000000004", "fields": {"name": "Store", "description": "Store officer who executes PPE issuing."}},
+  {"model": "accounts.role", "pk": "00000000-0000-0000-0000-000000000005", "fields": {"name": "Employee", "description": "Standard employee who views PPE and requests replacements."}}
+]

@@ -1,0 +1,15 @@
+-r base.txt
+
+# Testing
+pytest==8.*
+pytest-django==4.8.*
+pytest-cov==5.*
+pytest-asyncio==0.23.*
+factory-boy==3.3.*
+freezegun==1.5.*
+faker==25.*
+
+# Code quality
+black==24.*
+flake8==7.*
+isort==5.*

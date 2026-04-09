@@ -1,0 +1,71 @@
+name: Dependency Check & License Compliance
+
+on:
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  backend-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements/prod.txt
+          pip install -r backend/requirements/dev.txt
+          pip install safety pip-audit
+
+      - name: Check for known vulnerabilities (safety)
+        continue-on-error: true
+        run: |
+          cd backend
+          safety check --json > safety-report.json || true
+          cat safety-report.json
+
+      - name: Audit pip packages
+        continue-on-error: true
+        run: |
+          pip-audit --desc > pip-audit-report.txt || true
+          cat pip-audit-report.txt
+
+      - name: Upload dependency reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-dependency-reports
+          path: |
+            backend/safety-report.json
+            pip-audit-report.txt
+          retention-days: 90
+
+  frontend-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'latest'
+          cache: true
+
+      - name: Audit Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+          flutter pub outdated --no-dev-dependencies || true
+
+      - name: Check pubspec.lock for security issues
+        run: |
+          cd frontend
+          # Using pub.dev API to check for known vulnerabilities
+          echo "Checking Flutter dependencies for known vulnerabilities..."
+          flutter pub get

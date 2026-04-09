@@ -1,0 +1,26 @@
+[
+  {
+    "model": "inventory.warehouse",
+    "pk": "30000000-0000-0000-0000-000000000001",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000001",
+      "name": "Shaft 12 Main Store",
+      "location_description": "Surface level, adjacent to lamp room",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventory.warehouse",
+    "pk": "30000000-0000-0000-0000-000000000002",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000002",
+      "name": "Open Pit 3 Main Store",
+      "location_description": "Operations building, Room 4",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "model": "organization.department",
+    "pk": "13000000-0000-0000-0000-000000000001",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000001",
+      "name": "Underground Operations",
+      "manager": null,
+      "safety_officer": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "organization.department",
+    "pk": "13000000-0000-0000-0000-000000000002",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000001",
+      "name": "Electrical & Maintenance",
+      "manager": null,
+      "safety_officer": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "organization.department",
+    "pk": "13000000-0000-0000-0000-000000000003",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000002",
+      "name": "Blasting & Drilling",
+      "manager": null,
+      "safety_officer": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "organization.department",
+    "pk": "13000000-0000-0000-0000-000000000004",
+    "fields": {
+      "site": "12000000-0000-0000-0000-000000000002",
+      "name": "Processing Plant",
+      "manager": null,
+      "safety_officer": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

@@ -1,0 +1,30 @@
+# Trivy vulnerability scanner configuration
+# This file allows fine-tuning vulnerability scanning behavior
+
+[artifact]
+type = "fs"
+
+[scanner]
+target = "."
+skip-files = [
+  ".git",
+  "node_modules",
+  ".venv",
+  "venv",
+  "__pycache__",
+]
+skip-dirs = [
+  ".git",
+  "test",
+  "tests",
+  "fixtures",
+  "migrations",
+]
+
+[severity]
+# Fail on these severity levels
+severity = ["CRITICAL", "HIGH"]
+
+[reporting]
+format = "json"
+exit-code = 1
