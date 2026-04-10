@@ -68,7 +68,9 @@ jobs:
         run: black --check backend
 
       - name: Run import sorting check (isort)
-        run: isort --check-only backend
+        run: |
+          cd backend
+          isort --check-only .
 
       - name: Run Django tests with pytest
         env:
