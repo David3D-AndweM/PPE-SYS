@@ -88,6 +88,7 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database
 # ---------------------------------------------------------------------------
 
+
 def _database_from_url(url: str) -> dict:
     parsed = urlparse(url)
     scheme = parsed.scheme.split("+", 1)[0]  # tolerate sqlalchemy-style "postgresql+psycopg"
