@@ -81,13 +81,13 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
     setState(() { _loading = true; _loadError = null; });
     try {
       final repo = sl<PpeRepository>();
-      final results = await Future.wait([
+      final List<List<Map<String, dynamic>>> results = await Future.wait([
         repo.getPpeItems(),
         repo.getMyPpe(),
       ]);
 
-      final catalogue = results[0] as List<Map<String, dynamic>>;
-      final myPpe     = results[1] as List<Map<String, dynamic>>;
+      final catalogue = results[0];
+      final myPpe     = results[1];
 
       // Build status lookup: ppe_item_id → assignment data
       final statusMap = <String, Map<String, dynamic>>{};
