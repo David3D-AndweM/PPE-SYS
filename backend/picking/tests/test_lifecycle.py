@@ -7,12 +7,11 @@ import pytest
 
 from approvals.models import Approval, ApprovalStatus
 from audit.models import AuditLog
+from core.utils.qr import generate_slip_qr_payload
 from inventory.models import StockItem
 from notifications.models import Notification
 from picking.models import PickingSlip, SlipStatus
 from ppe.models import EmployeePPE, EmployeePPEStatus
-
-from core.utils.qr import generate_slip_qr_payload
 
 
 @pytest.mark.django_db(transaction=True)

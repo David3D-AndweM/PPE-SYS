@@ -50,8 +50,9 @@ class TestNotificationConsumer:
 
     async def test_dispatch_delivers_message(self, manager_user):
         from asgiref.sync import sync_to_async
-        from notifications.services import dispatch
+
         from notifications.models import NotificationType
+        from notifications.services import dispatch
 
         token = _get_token(manager_user)
         communicator = WebsocketCommunicator(

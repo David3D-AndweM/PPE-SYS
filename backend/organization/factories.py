@@ -2,6 +2,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from accounts.factories import UserFactory
+
 from .models import Department, Employee, Organization, Site
 
 

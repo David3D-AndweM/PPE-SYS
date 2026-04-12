@@ -97,11 +97,13 @@ class AppRouter {
     // Shared routes accessible to all authenticated users
     if (loc == '/notifications' || loc == '/profile') return null;
 
+    // PPE slip routes are accessible to every role (any employee can request PPE)
+    if (loc.startsWith('/my-ppe/slips')) return null;
+
     // Role-based guards — prevent wrong role landing on wrong section
     final role = auth.primaryRole;
     switch (role) {
       case 'Admin':
-        // Admin can go anywhere
         return null;
 
       case 'Manager':
@@ -208,6 +210,7 @@ class _AppShell extends StatelessWidget {
           _NavItem(Icons.dashboard_outlined,       Icons.dashboard,       'Dashboard',  '/admin'),
           _NavItem(Icons.people_outline,            Icons.people,          'Employees',  '/compliance'),
           _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
+          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
           _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
           _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
         ];
@@ -215,6 +218,7 @@ class _AppShell extends StatelessWidget {
         return [
           _NavItem(Icons.people_outline,            Icons.people,          'Compliance', '/compliance'),
           _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
+          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
           _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
           _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
         ];
@@ -222,12 +226,14 @@ class _AppShell extends StatelessWidget {
         return [
           _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
           _NavItem(Icons.people_outline,            Icons.people,          'Compliance', '/compliance'),
+          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
           _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
           _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
         ];
       case 'Store':
         return [
           _NavItem(Icons.qr_code_scanner,          Icons.qr_code_scanner, 'Scan',       '/store/scan'),
+          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
           _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
           _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
         ];

@@ -2,6 +2,7 @@ import factory
 from factory.django import DjangoModelFactory
 
 from organization.factories import EmployeeFactory
+
 from .models import EmployeePPE, EmployeePPEStatus, PPECategory, PPEItem
 
 

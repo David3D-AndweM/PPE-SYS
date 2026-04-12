@@ -64,7 +64,20 @@ extend-exclude = '''
 profile = "black"
 line_length = 120
 skip = ["migrations", "venv"]
-known_first_party = ["apps", "config", "core"]
+known_first_party = [
+    "accounts",
+    "approvals",
+    "apps",
+    "audit",
+    "celery_tasks",
+    "config",
+    "core",
+    "inventory",
+    "notifications",
+    "organization",
+    "picking",
+    "ppe",
+]
 
 [tool.flake8]
 max-line-length = 120

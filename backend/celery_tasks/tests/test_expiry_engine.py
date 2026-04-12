@@ -19,7 +19,9 @@ def employee_ppe_expired(db, employee, ppe_item):
         employee=employee,
         ppe_item=ppe_item,
         status=EmployeePPEStatus.VALID,
-        expiry_date=date.today() - timedelta(days=1),
+        # Explicit date to avoid coupling to wall-clock time (freezegun only
+        # guarantees the freeze during the test body, not necessarily during fixture setup).
+        expiry_date=date(2026, 4, 8),
     )
 
 
@@ -29,7 +31,7 @@ def employee_ppe_expiring_soon(db, employee, ppe_item):
         employee=employee,
         ppe_item=ppe_item,
         status=EmployeePPEStatus.VALID,
-        expiry_date=date.today() + timedelta(days=5),
+        expiry_date=date(2026, 4, 14),
     )
 
 
@@ -39,7 +41,7 @@ def critical_employee_ppe_expired(db, employee, critical_ppe_item):
         employee=employee,
         ppe_item=critical_ppe_item,
         status=EmployeePPEStatus.VALID,
-        expiry_date=date.today() - timedelta(days=1),
+        expiry_date=date(2026, 4, 8),
     )
 
 
@@ -94,7 +96,7 @@ class TestExpiryEngine:
         ).exists()
 
     def test_critical_expired_dispatches_admin_notification(self, critical_employee_ppe_expired, admin_user):
-        from accounts.factories import UserRoleFactory, RoleFactory
+        from accounts.factories import RoleFactory, UserRoleFactory
 
         # Ensure admin user is on the same site
         site = critical_employee_ppe_expired.employee.department.site

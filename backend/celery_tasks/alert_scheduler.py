@@ -18,9 +18,9 @@ def send_pre_expiry_alerts():
     For each configured alert threshold, find PPE expiring on exactly
     that day and send a targeted warning notification.
     """
-    from ppe.models import EmployeePPE, EmployeePPEStatus
     from notifications.models import NotificationType
     from notifications.services import dispatch
+    from ppe.models import EmployeePPE, EmployeePPEStatus
 
     today = date.today()
     thresholds = getattr(settings, "PPE_ALERT_THRESHOLDS_DAYS", [7, 3, 1])
