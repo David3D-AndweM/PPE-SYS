@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../auth/token_storage.dart';
-import 'endpoints.dart';
 import 'interceptors.dart';
 
 class ApiClient {
