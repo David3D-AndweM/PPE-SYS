@@ -75,7 +75,7 @@ jobs:
           output: 'trivy-frontend.sarif'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-frontend.sarif'
           category: 'Trivy-Frontend'
@@ -108,7 +108,7 @@ jobs:
           flutter build apk --debug --no-tree-shake-icons
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: flutter-apk-debug
           path: frontend/build/app/outputs/apk/debug/app-debug.apk
@@ -142,7 +142,7 @@ jobs:
           flutter build ios --debug --no-codesign
 
       - name: Upload iOS build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: flutter-ios-debug
           path: frontend/build/ios
