@@ -46,6 +46,6 @@ class Endpoints {
   static String get auditLogs => '$base/audit/logs/';
 
   // WebSocket
-  static String notifications_ws(String token) =>
-      '${wsBase}/notifications/?token=$token';
+  static String notificationsWs(String token) =>
+      '$wsBase/notifications/?token=$token';
 }
