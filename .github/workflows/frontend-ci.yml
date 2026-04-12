@@ -151,6 +151,58 @@ jobs:
           path: frontend/build/ios
           retention-days: 30
 
+  # Create GitHub Release with APK and iOS artifacts
+  release:
+    needs: [build-apk, build-ios]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-apk-debug
+          path: ./artifacts
+
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-ios-debug
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: flutter-${{ github.run_number }}-${{ github.ref_name }}
+          name: 'Flutter Build #${{ github.run_number }} - ${{ github.ref_name }}'
+          body: |
+            Automated release from CI/CD pipeline
+
+            **Build Details:**
+            - Branch: ${{ github.ref_name }}
+            - Commit: ${{ github.sha }}
+            - Author: ${{ github.actor }}
+            - Run: ${{ github.run_id }}
+
+            **Artifacts:**
+            - `app-debug.apk` - Android debug build
+            - iOS framework files - iOS debug build
+
+            **Installation:**
+            - Android: Download the APK and install directly on device or emulator
+            - iOS: Use Xcode or build tools to deploy the framework
+          files: |
+            ./artifacts/app-debug.apk
+            ./artifacts/ios
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # Notify deployment status via email
   notify:
     needs: [build-apk, build-ios]
@@ -186,6 +238,8 @@ jobs:
             Build Artifacts:
             - APK: Check GitHub Actions artifacts (30-day retention)
             - iOS: Check GitHub Actions artifacts (30-day retention)
+
+            ${{ github.ref_name == 'main' && '📦 Release Published: Check GitHub Releases for downloadable artifacts' || '' }}
 
             ---
             This is an automated message from PPE System CI/CD
