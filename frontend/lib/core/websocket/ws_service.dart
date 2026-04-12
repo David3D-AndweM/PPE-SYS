@@ -34,7 +34,7 @@ class WsService {
     if (token == null) return;
 
     try {
-      final uri = Uri.parse(Endpoints.notifications_ws(token));
+      final uri = Uri.parse(Endpoints.notificationsWs(token));
       _channel = WebSocketChannel.connect(uri);
       _reconnectDelay = 2; // reset on successful connect
 

@@ -39,10 +39,9 @@ jobs:
           flutter pub get
 
       - name: Run Flutter analyzer
-        continue-on-error: true
         run: |
           cd frontend
-          flutter analyze
+          flutter analyze --no-fatal-infos
 
       - name: Run Flutter tests
         continue-on-error: true
