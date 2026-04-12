@@ -11,6 +11,11 @@ on:
     paths:
       - 'frontend/**'
 
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/frontend

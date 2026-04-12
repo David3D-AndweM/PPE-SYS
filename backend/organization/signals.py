@@ -21,9 +21,7 @@ def on_employee_saved(sender, instance, created, **kwargs):
         try:
             auto_assign_ppe(instance)
         except Exception:
-            logger.exception(
-                "PPE auto-assignment failed for employee %s", instance.mine_number
-            )
+            logger.exception("PPE auto-assignment failed for employee %s", instance.mine_number)
     elif instance.previous_department and instance.previous_department != instance.department:
         logger.info(
             "Employee %s transferred from %s to %s — re-assigning PPE",
@@ -34,6 +32,4 @@ def on_employee_saved(sender, instance, created, **kwargs):
         try:
             auto_assign_ppe(instance)
         except Exception:
-            logger.exception(
-                "PPE re-assignment after transfer failed for %s", instance.mine_number
-            )
+            logger.exception("PPE re-assignment after transfer failed for %s", instance.mine_number)

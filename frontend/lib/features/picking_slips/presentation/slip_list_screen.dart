@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../injection.dart';
 import '../data/picking_repository.dart';
@@ -48,7 +47,10 @@ class _SlipListScreenState extends State<SlipListScreen> {
                       itemBuilder: (_, i) {
                         final slip = _slips[i];
                         return ListTile(
-                          title: Text('Request #${(slip['slip_number'] ?? '').toString().substring(0, 8)}'),
+                          title: Text(() {
+                            final s = (slip['slip_number'] ?? slip['id'] ?? '').toString();
+                            return 'Request #${s.length > 8 ? s.substring(0, 8) : s}';
+                          }()),
                           subtitle: Text('${slip['request_type']} · ${slip['created_at']?.toString().substring(0, 10)}'),
                           trailing: _StatusChip(status: slip['status'] ?? ''),
                           onTap: () => context.push('/my-ppe/slips/${slip['id']}'),

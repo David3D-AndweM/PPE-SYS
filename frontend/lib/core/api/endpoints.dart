@@ -1,8 +1,8 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/app_config.dart';
 
 class Endpoints {
-  static String get base => dotenv.env['API_BASE_URL'] ?? 'http://localhost/api/v1';
-  static String get wsBase => dotenv.env['WS_BASE_URL'] ?? 'ws://localhost/ws';
+  static String get base => AppConfig.instance.apiBaseUrl;
+  static String get wsBase => AppConfig.instance.wsBaseUrl;
 
   // Auth
   static String get login => '$base/auth/login/';
@@ -15,6 +15,7 @@ class Endpoints {
 
   // PPE catalogue
   static String get ppeItems => '$base/ppe/items/';
+  static String get assignments => '$base/ppe/assignments/';
 
   // Picking slips
   static String get pickingSlips => '$base/picking/slips/';

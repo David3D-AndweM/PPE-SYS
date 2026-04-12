@@ -20,9 +20,7 @@ class Organization(TimeStampedModel):
 class Site(TimeStampedModel):
     """A physical location (mine) belonging to an Organization."""
 
-    organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="sites"
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="sites")
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=500, blank=True)
     is_active = models.BooleanField(default=True)
@@ -84,9 +82,7 @@ class Employee(SoftDeleteModel):
         on_delete=models.CASCADE,
         related_name="employee",
     )
-    department = models.ForeignKey(
-        Department, on_delete=models.PROTECT, related_name="employees"
-    )
+    department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name="employees")
     mine_number = models.CharField(max_length=50, unique=True)
     role_title = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)

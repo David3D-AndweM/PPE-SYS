@@ -1,9 +1,10 @@
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.permissions import IsAdmin, IsAdminOrManager, IsStoreOfficer
+from ppe.models import PPEItem
 
 from .models import StockItem, StockMovement, Warehouse
 from .serializers import (
@@ -13,7 +14,6 @@ from .serializers import (
     WarehouseSerializer,
 )
 from .services import receive_stock
-from ppe.models import PPEItem
 
 
 class WarehouseListCreateView(ListCreateAPIView):
@@ -27,6 +27,12 @@ class WarehouseListCreateView(ListCreateAPIView):
         if site:
             qs = qs.filter(site_id=site)
         return qs
+
+
+class WarehouseDetailView(RetrieveUpdateAPIView):
+    queryset = Warehouse.objects.select_related("site").all()
+    serializer_class = WarehouseSerializer
+    permission_classes = [IsAdmin | IsStoreOfficer]
 
 
 class StockItemListView(ListAPIView):
@@ -62,6 +68,7 @@ class StockReceiveView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
         from .models import ReferenceType
+
         stock = receive_stock(
             ppe_item=ppe_item,
             warehouse=warehouse,

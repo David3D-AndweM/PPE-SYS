@@ -6,9 +6,7 @@ from core.utils.validators import validate_positive
 
 
 class Warehouse(TimeStampedModel):
-    site = models.ForeignKey(
-        "organization.Site", on_delete=models.CASCADE, related_name="warehouses"
-    )
+    site = models.ForeignKey("organization.Site", on_delete=models.CASCADE, related_name="warehouses")
     name = models.CharField(max_length=255)
     location_description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -24,12 +22,8 @@ class Warehouse(TimeStampedModel):
 class StockItem(TimeStampedModel):
     """Current stock level of a PPE item in a warehouse."""
 
-    ppe_item = models.ForeignKey(
-        "ppe.PPEItem", on_delete=models.PROTECT, related_name="stock_items"
-    )
-    warehouse = models.ForeignKey(
-        Warehouse, on_delete=models.CASCADE, related_name="stock_items"
-    )
+    ppe_item = models.ForeignKey("ppe.PPEItem", on_delete=models.PROTECT, related_name="stock_items")
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stock_items")
     quantity_available = models.PositiveIntegerField(default=0, validators=[validate_positive])
     reorder_level = models.PositiveIntegerField(
         default=10,
@@ -66,12 +60,8 @@ class ReferenceType(models.TextChoices):
 class StockMovement(TimeStampedModel):
     """Immutable log of every stock change. Never update — only append."""
 
-    ppe_item = models.ForeignKey(
-        "ppe.PPEItem", on_delete=models.PROTECT, related_name="stock_movements"
-    )
-    warehouse = models.ForeignKey(
-        Warehouse, on_delete=models.CASCADE, related_name="stock_movements"
-    )
+    ppe_item = models.ForeignKey("ppe.PPEItem", on_delete=models.PROTECT, related_name="stock_movements")
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stock_movements")
     change_type = models.CharField(max_length=5, choices=ChangeType.choices)
     quantity = models.PositiveIntegerField(validators=[validate_positive])
     reference_type = models.CharField(max_length=20, choices=ReferenceType.choices)

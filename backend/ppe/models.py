@@ -61,9 +61,7 @@ class PPEConfiguration(TimeStampedModel):
     as a plain UUID to avoid a polymorphic FK. Service layer resolves it.
     """
 
-    ppe_item = models.ForeignKey(
-        PPEItem, on_delete=models.CASCADE, related_name="configurations"
-    )
+    ppe_item = models.ForeignKey(PPEItem, on_delete=models.CASCADE, related_name="configurations")
     scope_type = models.CharField(max_length=20, choices=ScopeType.choices)
     scope_id = models.UUIDField(null=True, blank=True)
     validity_days = models.PositiveIntegerField(validators=[validate_positive_nonzero])
@@ -75,7 +73,7 @@ class PPEConfiguration(TimeStampedModel):
     # JSONB: [{"role": "manager", "required": true}, {"role": "safety", "required": true}]
     approval_levels = models.JSONField(
         default=list,
-        help_text="Ordered list of approval steps. Example: [{\"role\": \"manager\", \"required\": true}]",
+        help_text='Ordered list of approval steps. Example: [{"role": "manager", "required": true}]',
     )
 
     class Meta:

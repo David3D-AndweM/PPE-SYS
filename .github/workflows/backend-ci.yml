@@ -11,6 +11,11 @@ on:
     paths:
       - 'backend/**'
 
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/backend
@@ -68,7 +73,9 @@ jobs:
         run: black --check backend
 
       - name: Run import sorting check (isort)
-        run: isort --check-only backend
+        run: |
+          cd backend
+          isort --check-only .
 
       - name: Run Django tests with pytest
         env:
@@ -91,6 +98,8 @@ jobs:
   # Security scanning
   security:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
@@ -103,7 +112,7 @@ jobs:
           output: 'trivy-backend.sarif'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-backend.sarif'
           category: 'Trivy-Backend'
@@ -138,8 +147,8 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4

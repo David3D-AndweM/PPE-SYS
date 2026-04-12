@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -61,6 +61,18 @@ class DepartmentPPERequirementListCreateView(ListCreateAPIView):
         return qs
 
 
+class PPEConfigurationDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = PPEConfiguration.objects.select_related("ppe_item").all()
+    serializer_class = PPEConfigurationSerializer
+    permission_classes = [IsAdmin]
+
+
+class DepartmentPPERequirementDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = DepartmentPPERequirement.objects.select_related("department", "ppe_item").all()
+    serializer_class = DepartmentPPERequirementSerializer
+    permission_classes = [IsAdminOrManager]
+
+
 class EmployeePPEListView(ListAPIView):
     serializer_class = EmployeePPESerializer
     permission_classes = [IsAuthenticated]
@@ -96,9 +108,7 @@ class MyPPEView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "employee"):
-            return EmployeePPE.objects.filter(
-                employee=user.employee
-            ).select_related("ppe_item")
+            return EmployeePPE.objects.filter(employee=user.employee).select_related("ppe_item")
         return EmployeePPE.objects.none()
 
 

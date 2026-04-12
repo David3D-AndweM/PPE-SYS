@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/websocket/ws_service.dart';
 import '../../../injection.dart';
 import '../data/notifications_repository.dart';
 
@@ -13,7 +14,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _loading = true;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    sl<WsService>().resetBadge();
+    _load();
+  }
 
   Future<void> _load() async {
     setState(() => _loading = true);

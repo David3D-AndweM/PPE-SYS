@@ -8,11 +8,7 @@ def _has_role(request, role_name):
         # Fall back to DB if JWT claims not available
         if not request.user or not request.user.is_authenticated:
             return False
-        roles = list(
-            request.user.user_roles.select_related("role").values_list(
-                "role__name", flat=True
-            )
-        )
+        roles = list(request.user.user_roles.select_related("role").values_list("role__name", flat=True))
         request.user_roles = roles  # cache on request
     return role_name in roles
 
@@ -21,9 +17,7 @@ class IsAdmin(BasePermission):
     message = "Admin role required."
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_superuser or _has_role(request, "Admin")
-        )
+        return request.user.is_authenticated and (request.user.is_superuser or _has_role(request, "Admin"))
 
 
 class IsManager(BasePermission):
@@ -59,9 +53,7 @@ class IsAdminOrManager(BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and (
-            request.user.is_superuser
-            or _has_role(request, "Admin")
-            or _has_role(request, "Manager")
+            request.user.is_superuser or _has_role(request, "Admin") or _has_role(request, "Manager")
         )
 
 
@@ -71,6 +63,4 @@ class IsApprover(BasePermission):
     message = "Manager or Safety Officer role required."
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            _has_role(request, "Manager") or _has_role(request, "Safety")
-        )
+        return request.user.is_authenticated and (_has_role(request, "Manager") or _has_role(request, "Safety"))

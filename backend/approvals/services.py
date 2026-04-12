@@ -43,10 +43,14 @@ def approve(approval_id, user, comment=""):
     After approval, check if all required steps are done.
     Raises PermissionError if the user doesn't hold the required role.
     """
-    approval = Approval.objects.select_for_update().select_related(
-        "picking_slip__employee__user",
-        "picking_slip__employee__department__site",
-    ).get(pk=approval_id)
+    approval = (
+        Approval.objects.select_for_update()
+        .select_related(
+            "picking_slip__employee__user",
+            "picking_slip__employee__department__site",
+        )
+        .get(pk=approval_id)
+    )
 
     _validate_approver_role(approval, user)
 
@@ -54,11 +58,10 @@ def approve(approval_id, user, comment=""):
         raise ValueError(f"This approval step is already {approval.status}.")
 
     approval.mark_approved(user, comment)
-    logger.info(
-        "Approval %s approved by %s", approval_id, user.email
-    )
+    logger.info("Approval %s approved by %s", approval_id, user.email)
 
     from audit.models import log_action
+
     log_action(
         action="approval_approved",
         entity_type="Approval",
@@ -76,9 +79,7 @@ def reject(approval_id, user, comment=""):
     """
     Mark an approval as rejected. The entire PickingSlip is immediately rejected.
     """
-    approval = Approval.objects.select_for_update().select_related("picking_slip").get(
-        pk=approval_id
-    )
+    approval = Approval.objects.select_for_update().select_related("picking_slip").get(pk=approval_id)
     _validate_approver_role(approval, user)
 
     approval.mark_rejected(user, comment)
@@ -89,6 +90,7 @@ def reject(approval_id, user, comment=""):
     slip.save(update_fields=["status", "updated_at"])
 
     from audit.models import log_action
+
     log_action(
         action="approval_rejected",
         entity_type="Approval",
@@ -99,8 +101,8 @@ def reject(approval_id, user, comment=""):
 
     # Notify requester
     try:
-        from notifications.services import dispatch
         from notifications.models import NotificationType
+        from notifications.services import dispatch
 
         dispatch(
             user=slip.requested_by,
@@ -137,6 +139,7 @@ def check_all_approved(picking_slip):
         logger.info("PickingSlip %s fully approved", picking_slip.id)
 
         from audit.models import log_action
+
         log_action(
             action="picking_slip_approved",
             entity_type="PickingSlip",
@@ -157,9 +160,7 @@ def _validate_approver_role(approval, user):
     }
     required = role_map.get(approval.required_role, approval.required_role.capitalize())
     if required not in roles and not user.is_superuser:
-        raise PermissionError(
-            f"You must hold the {required} role to perform this approval."
-        )
+        raise PermissionError(f"You must hold the {required} role to perform this approval.")
 
 
 def _notify_approvers(picking_slip, approval_levels):

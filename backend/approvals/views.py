@@ -21,9 +21,7 @@ class PendingApprovalListView(ListAPIView):
         """
         user = self.request.user
         roles = list(user.user_roles.values_list("role__name", flat=True))
-        site_ids = list(
-            user.user_roles.exclude(site=None).values_list("site_id", flat=True)
-        )
+        site_ids = list(user.user_roles.exclude(site=None).values_list("site_id", flat=True))
 
         role_map = {"Manager": "manager", "Safety": "safety", "Admin": "admin"}
         user_approval_roles = [role_map[r] for r in roles if r in role_map]
@@ -37,9 +35,7 @@ class PendingApprovalListView(ListAPIView):
         )
 
         if site_ids and not user.is_superuser:
-            qs = qs.filter(
-                picking_slip__employee__department__site_id__in=site_ids
-            )
+            qs = qs.filter(picking_slip__employee__department__site_id__in=site_ids)
 
         return qs
 

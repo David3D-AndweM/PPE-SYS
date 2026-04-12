@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../api/endpoints.dart';
@@ -17,6 +18,9 @@ class WsService {
   NotificationCallback? _onNotification;
   int _reconnectDelay = 2;
   bool _intentionalClose = false;
+
+  /// Increments each time a push notification arrives. Reset on badge tap.
+  final unreadPushCount = ValueNotifier<int>(0);
 
   WsService(this._storage);
 
@@ -59,10 +63,13 @@ class WsService {
     _channel = null;
   }
 
+  void resetBadge() => unreadPushCount.value = 0;
+
   void _onMessage(dynamic raw) {
     try {
       final data = jsonDecode(raw as String) as Map<String, dynamic>;
       _onNotification?.call(data);
+      unreadPushCount.value++;
     } catch (_) {}
   }
 

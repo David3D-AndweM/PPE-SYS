@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_bloc.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -14,6 +14,7 @@ class AdminDashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
             onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
           ),
         ],
@@ -25,10 +26,10 @@ class AdminDashboardScreen extends StatelessWidget {
         mainAxisSpacing: 12,
         children: [
           _Tile(Icons.people, 'Employees', '/compliance'),
-          _Tile(Icons.security, 'PPE Catalogue', '/my-ppe'),
+          _Tile(Icons.security, 'PPE Catalogue', '/admin/catalogue'),
           _Tile(Icons.approval, 'Approvals', '/approvals'),
-          _Tile(Icons.inventory_2, 'Inventory', '/my-ppe'),
-          _Tile(Icons.history, 'Audit Log', '/my-ppe'),
+          _Tile(Icons.inventory_2, 'Inventory', '/admin/inventory'),
+          _Tile(Icons.history, 'Audit Log', '/admin/audit'),
           _Tile(Icons.notifications, 'Notifications', '/notifications'),
         ],
       ),

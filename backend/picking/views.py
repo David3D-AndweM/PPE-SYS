@@ -23,8 +23,10 @@ class PickingSlipListView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = PickingSlip.objects.select_related(
-            "employee__user", "employee__department__site",
-            "department", "requested_by",
+            "employee__user",
+            "employee__department__site",
+            "department",
+            "requested_by",
         ).prefetch_related("items__ppe_item", "approvals")
 
         # Employees can only see their own slips
@@ -60,8 +62,8 @@ class CreatePickingSlipView(APIView):
         serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
 
-        from organization.models import Employee
         from inventory.models import Warehouse
+        from organization.models import Employee
 
         try:
             employee = Employee.objects.get(pk=d["employee_id"])

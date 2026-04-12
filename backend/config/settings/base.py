@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from decouple import Csv, config
 
@@ -87,16 +88,52 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database
 # ---------------------------------------------------------------------------
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB", default="ppe_db"),
-        "USER": config("POSTGRES_USER", default="ppe_user"),
-        "PASSWORD": config("POSTGRES_PASSWORD", default="ppe_password"),
-        "HOST": config("POSTGRES_HOST", default="db"),
-        "PORT": config("POSTGRES_PORT", default="5432"),
+
+def _database_from_url(url: str) -> dict:
+    parsed = urlparse(url)
+    scheme = parsed.scheme.split("+", 1)[0]  # tolerate sqlalchemy-style "postgresql+psycopg"
+    if scheme in {"postgres", "postgresql"}:
+        engine = "django.db.backends.postgresql"
+    elif scheme in {"sqlite", "sqlite3"}:
+        engine = "django.db.backends.sqlite3"
+    else:
+        raise ValueError(f"Unsupported DATABASE_URL scheme: {parsed.scheme!r}")
+
+    # urlparse() keeps percent-encoding in user/pass/path; Django expects decoded values.
+    name = unquote(parsed.path.lstrip("/")) if parsed.path else ""
+    user = unquote(parsed.username or "")
+    password = unquote(parsed.password or "")
+    host = parsed.hostname or ""
+    port = str(parsed.port) if parsed.port is not None else ""
+
+    if engine == "django.db.backends.sqlite3":
+        # sqlite:///absolute/path or sqlite:///:memory:
+        return {"ENGINE": engine, "NAME": name or ":memory:"}
+
+    return {
+        "ENGINE": engine,
+        "NAME": name,
+        "USER": user,
+        "PASSWORD": password,
+        "HOST": host,
+        "PORT": port,
     }
-}
+
+
+_database_url = config("DATABASE_URL", default=None)
+if _database_url:
+    DATABASES = {"default": _database_from_url(_database_url)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB", default="ppe_db"),
+            "USER": config("POSTGRES_USER", default="ppe_user"),
+            "PASSWORD": config("POSTGRES_PASSWORD", default="ppe_password"),
+            "HOST": config("POSTGRES_HOST", default="db"),
+            "PORT": config("POSTGRES_PORT", default="5432"),
+        }
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -139,12 +176,8 @@ REST_FRAMEWORK = {
 # ---------------------------------------------------------------------------
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(
-        minutes=config("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default=15, cast=int)
-    ),
-    "REFRESH_TOKEN_LIFETIME": timedelta(
-        days=config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
-    ),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=config("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default=15, cast=int)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
@@ -237,6 +270,21 @@ CORS_ALLOW_CREDENTIALS = True
 # ---------------------------------------------------------------------------
 
 QR_SECRET_KEY = config("QR_SECRET_KEY", default="insecure-qr-dev-key")
+
+# ---------------------------------------------------------------------------
+# Email
+# ---------------------------------------------------------------------------
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=25, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@ppe-system.dev")
 
 # Alert thresholds (days before expiry to send warnings)
 PPE_ALERT_THRESHOLDS_DAYS = [7, 3, 1]

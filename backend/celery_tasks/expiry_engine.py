@@ -20,15 +20,23 @@ LOCK_KEY = "ppe:expiry_engine:lock"
 LOCK_TTL = 3600  # 1 hour — task should never take this long
 
 
+def _get_redis_client():
+    """Return a redis-py client using the Django cache LOCATION setting."""
+    import redis
+    from django.conf import settings as s
+
+    location = s.CACHES.get("default", {}).get("LOCATION", "redis://localhost:6379/0")
+    return redis.from_url(location)
+
+
 @shared_task(name="celery_tasks.expiry_engine.run_expiry_check", bind=True, max_retries=0)
 def run_expiry_check(self):
     """
     Main expiry engine task. Acquires a Redis lock before processing.
     """
-    from django.core.cache import cache
-
-    lock = cache.lock(LOCK_KEY, timeout=LOCK_TTL)
-    if not lock.acquire(blocking=False):
+    client = _get_redis_client()
+    acquired = client.set(LOCK_KEY, "1", ex=LOCK_TTL, nx=True)
+    if not acquired:
         logger.warning("Expiry engine already running — skipping this run")
         return {"status": "skipped", "reason": "lock_held"}
 
@@ -36,7 +44,7 @@ def run_expiry_check(self):
         return _run_expiry_check_logic()
     finally:
         try:
-            lock.release()
+            client.delete(LOCK_KEY)
         except Exception:
             pass
 
@@ -58,6 +66,7 @@ def _run_expiry_check_logic():
     }
 
     from audit.models import log_action
+
     log_action(
         action="expiry_engine_run",
         entity_type="System",
@@ -89,16 +98,12 @@ def _mark_expired(today, chunk_size):
         _notify_expiry(emp_ppe, "expired")
 
         if len(ids_to_update) >= chunk_size:
-            EmployeePPE.objects.filter(id__in=ids_to_update).update(
-                status=EmployeePPEStatus.EXPIRED
-            )
+            EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRED)
             total += len(ids_to_update)
             ids_to_update = []
 
     if ids_to_update:
-        EmployeePPE.objects.filter(id__in=ids_to_update).update(
-            status=EmployeePPEStatus.EXPIRED
-        )
+        EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRED)
         total += len(ids_to_update)
 
     return total
@@ -132,16 +137,12 @@ def _mark_expiring_soon(today, chunk_size):
         _notify_expiry(emp_ppe, "expiring_soon")
 
         if len(ids_to_update) >= chunk_size:
-            EmployeePPE.objects.filter(id__in=ids_to_update).update(
-                status=EmployeePPEStatus.EXPIRING_SOON
-            )
+            EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRING_SOON)
             total += len(ids_to_update)
             ids_to_update = []
 
     if ids_to_update:
-        EmployeePPE.objects.filter(id__in=ids_to_update).update(
-            status=EmployeePPEStatus.EXPIRING_SOON
-        )
+        EmployeePPE.objects.filter(id__in=ids_to_update).update(status=EmployeePPEStatus.EXPIRING_SOON)
         total += len(ids_to_update)
 
     return total
@@ -169,10 +170,7 @@ def _notify_expiry(emp_ppe, event_type):
         else:
             days_remaining = (emp_ppe.expiry_date - date.today()).days
             title = f"PPE Expiring Soon: {ppe_name}"
-            message = (
-                f"Your {ppe_name} expires on {emp_ppe.expiry_date} "
-                f"({days_remaining} day(s) remaining)."
-            )
+            message = f"Your {ppe_name} expires on {emp_ppe.expiry_date} " f"({days_remaining} day(s) remaining)."
 
         # Notify employee
         dispatch(

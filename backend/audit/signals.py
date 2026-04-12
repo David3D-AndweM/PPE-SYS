@@ -40,8 +40,8 @@ def register_audit(model, action_create="created", action_update="updated"):
 
 # Register critical models
 def _setup_audit_signals():
-    from picking.models import PickingSlip
     from approvals.models import Approval
+    from picking.models import PickingSlip
 
     register_audit(PickingSlip, "picking_slip_created", "picking_slip_updated")
     register_audit(Approval, "approval_created", "approval_updated")

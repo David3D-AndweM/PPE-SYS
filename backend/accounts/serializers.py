@@ -13,9 +13,7 @@ class RoleSerializer(serializers.ModelSerializer):
 class UserRoleSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source="role.name", read_only=True)
     site_name = serializers.CharField(source="site.name", read_only=True, default=None)
-    department_name = serializers.CharField(
-        source="department.name", read_only=True, default=None
-    )
+    department_name = serializers.CharField(source="department.name", read_only=True, default=None)
 
     class Meta:
         model = UserRole
