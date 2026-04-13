@@ -25,18 +25,14 @@ class UserRoleSerializer(serializers.ModelSerializer):
         site = attrs.get("site")
         role_name = (role.name if role else "").strip()
 
-        # Enforce department-scoped identity for operational roles.
-        if role_name in {"Manager", "Employee"} and department is None:
-            raise serializers.ValidationError(
-                {"department": "Department is required for Manager and Employee roles."}
-            )
+        # Enforce department-scoped identity for all operational roles.
+        if role_name != "Admin" and department is None:
+            raise serializers.ValidationError({"department": "Department is required for non-admin roles."})
 
         if department is not None:
             department_site = department.site
             if site is not None and site.id != department_site.id:
-                raise serializers.ValidationError(
-                    {"site": "Selected site does not match the selected department."}
-                )
+                raise serializers.ValidationError({"site": "Selected site does not match the selected department."})
             # Auto-populate scope site from department if omitted.
             attrs["site"] = department_site
 
@@ -55,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "full_name",
+            "profile_image",
             "is_active",
             "date_joined",
             "user_roles",

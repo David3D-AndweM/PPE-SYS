@@ -88,7 +88,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       builder: (dialogCtx) => StatefulBuilder(
         builder: (_, setDialog) {
           final roleName = _roleNameById(selectedRoleId);
-          final deptRequired = roleName == 'Employee' || roleName == 'Manager';
+          final deptRequired = roleName != 'Admin';
+          final needsEmployeeRecord = roleName == 'Employee' || roleName == 'Manager';
           return AlertDialog(
             title: const Text('Create User'),
             content: SizedBox(
@@ -130,7 +131,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       onChanged: (v) {
                         setDialog(() {
                           selectedRoleId = v;
-                          if (!deptRequired) selectedDepartmentId = null;
+                          if (!deptRequired) {
+                            selectedDepartmentId = null;
+                          }
                         });
                       },
                       decoration: const InputDecoration(labelText: 'Role'),
@@ -155,7 +158,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         labelText: deptRequired ? 'Department (Required)' : 'Department',
                       ),
                     ),
-                    if (deptRequired) ...[
+                    if (needsEmployeeRecord) ...[
                       const SizedBox(height: 10),
                       TextField(
                         controller: mineNumberCtrl,
@@ -186,7 +189,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   final password = passwordCtrl.text.trim();
                   final roleId = selectedRoleId;
                   final roleNameNow = _roleNameById(roleId);
-                  final needsDept = roleNameNow == 'Employee' || roleNameNow == 'Manager';
+                  final needsDept = roleNameNow != 'Admin';
+                  final createEmployeeRecord =
+                      roleNameNow == 'Employee' || roleNameNow == 'Manager';
                   if (email.isEmpty ||
                       firstName.isEmpty ||
                       lastName.isEmpty ||
@@ -221,7 +226,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       },
                     );
 
-                    if (needsDept && selectedDepartmentId != null) {
+                    if (createEmployeeRecord && selectedDepartmentId != null) {
                       await sl<ApiClient>().post(
                         Endpoints.employees,
                         data: {

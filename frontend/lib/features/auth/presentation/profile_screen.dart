@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/endpoints.dart';
@@ -19,6 +21,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _changingPassword = false;
   bool _obscureOld = true;
   bool _obscureNew = true;
+  bool _uploadingImage = false;
+  String? _profileImageUrl;
+  final ImagePicker _imagePicker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
 
   @override
   void dispose() {
@@ -59,6 +70,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadProfile() async {
+    try {
+      final response = await sl<ApiClient>().get(Endpoints.profile);
+      final data = response.data as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() => _profileImageUrl = data['profile_image'] as String?);
+    } catch (_) {}
+  }
+
+  Future<void> _uploadProfileImage() async {
+    final file = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+    setState(() => _uploadingImage = true);
+    try {
+      final formData = FormData.fromMap({
+        'profile_image': await MultipartFile.fromFile(
+          file.path,
+          filename: file.name,
+        ),
+      });
+      final response = await sl<ApiClient>().patch(
+        Endpoints.profile,
+        data: formData,
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() => _profileImageUrl = data['profile_image'] as String?);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile photo updated')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to upload image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthBloc>().state as AuthAuthenticated;
@@ -83,14 +141,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    initials,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  backgroundImage:
+                      _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                          ? NetworkImage(_profileImageUrl!)
+                          : null,
+                  child: (_profileImageUrl == null || _profileImageUrl!.isEmpty)
+                      ? Text(
+                          initials,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: _uploadingImage ? null : _uploadProfileImage,
+                  icon: _uploadingImage
+                      ? const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.photo_camera_outlined),
+                  label: const Text('Upload Photo'),
                 ),
                 const SizedBox(height: 12),
                 Text(

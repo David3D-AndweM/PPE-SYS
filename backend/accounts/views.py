@@ -164,8 +164,20 @@ class AssignRoleView(APIView):
 
         serializer = UserRoleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        user_role = serializer.save(user=user)
+
+        # Keep department ownership fields aligned with role assignment.
+        department = user_role.department
+        if department is not None:
+            role_name = user_role.role.name
+            if role_name == "Manager":
+                department.manager = user
+                department.save(update_fields=["manager"])
+            elif role_name == "Safety":
+                department.safety_officer = user
+                department.save(update_fields=["safety_officer"])
+
+        return Response(UserRoleSerializer(user_role).data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, user_id):
         role_id = request.data.get("role_id")

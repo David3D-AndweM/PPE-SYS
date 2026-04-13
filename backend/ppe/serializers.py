@@ -46,6 +46,7 @@ class PPEItemSerializer(serializers.ModelSerializer):
             "is_critical",
             "default_validity_days",
             "requires_serial_tracking",
+            "image",
             "is_active",
         ]
         read_only_fields = ["id"]

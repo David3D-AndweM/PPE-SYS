@@ -35,6 +35,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "django_celery_results",
     "django_extensions",
+    "storages",
 ]
 
 LOCAL_APPS = [
@@ -253,6 +254,22 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Optional S3-compatible object storage (MinIO/AWS S3) for uploaded media.
+USE_S3 = config("USE_S3", default=False, cast=bool)
+if USE_S3:
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME", default="ppe-media")
+    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
+    AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="")
+    AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE", default="path")
+    AWS_QUERYSTRING_AUTH = config("AWS_QUERYSTRING_AUTH", default=False, cast=bool)
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    if AWS_S3_ENDPOINT_URL:
+        MEDIA_URL = f"{AWS_S3_ENDPOINT_URL.rstrip('/')}/{AWS_STORAGE_BUCKET_NAME}/"
 
 # ---------------------------------------------------------------------------
 # CORS

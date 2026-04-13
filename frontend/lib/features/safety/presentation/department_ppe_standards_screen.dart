@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/endpoints.dart';
@@ -27,6 +29,7 @@ class _DepartmentPpeStandardsScreenState
   final Set<String> _dirtyPpeItemIds = {};
 
   String? _selectedDepartmentId;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -431,6 +434,7 @@ class _DepartmentPpeStandardsScreenState
     String category = (existing?['category'] as String?) ?? 'head';
     bool critical = (existing?['is_critical'] as bool?) ?? false;
     bool serial = (existing?['requires_serial_tracking'] as bool?) ?? false;
+    XFile? selectedImage;
     const categories = [
       'head',
       'eye',
@@ -481,6 +485,31 @@ class _DepartmentPpeStandardsScreenState
                   onChanged: (v) => setDialog(() => serial = v),
                   title: const Text('Requires Serial Tracking'),
                 ),
+                const SizedBox(height: 6),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.image_outlined),
+                  title: Text(
+                    selectedImage != null
+                        ? selectedImage!.name
+                        : ((existing?['image'] as String?)?.isNotEmpty ?? false)
+                            ? 'Current image available'
+                            : 'No image selected',
+                  ),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      final picked = await _imagePicker.pickImage(
+                        source: ImageSource.gallery,
+                        maxWidth: 1400,
+                        imageQuality: 85,
+                      );
+                      if (picked != null) {
+                        setDialog(() => selectedImage = picked);
+                      }
+                    },
+                    child: const Text('Choose Image'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -508,12 +537,20 @@ class _DepartmentPpeStandardsScreenState
         'is_critical': critical,
         'requires_serial_tracking': serial,
       };
+      final data = FormData.fromMap({
+        ...payload,
+        if (selectedImage != null)
+          'image': await MultipartFile.fromFile(
+            selectedImage!.path,
+            filename: selectedImage!.name,
+          ),
+      });
       if (existing == null) {
-        await sl<ApiClient>().post(Endpoints.ppeItems, data: payload);
+        await sl<ApiClient>().post(Endpoints.ppeItems, data: data);
       } else {
         await sl<ApiClient>().patch(
           Endpoints.ppeItemDetail(existing['id'] as String),
-          data: payload,
+          data: data,
         );
       }
       await _loadInitialData();
@@ -735,6 +772,7 @@ class _DepartmentPpeStandardsScreenState
                     return _RequirementCard(
                       title: item['name'] as String? ?? 'PPE',
                       category: item['category'] as String? ?? '',
+                      imageUrl: item['image'] as String?,
                       isRequired: draft.isRequired,
                       quantity: draft.quantity,
                       validityDays: draft.validityDays,
@@ -847,6 +885,7 @@ class _DepartmentPpeStandardsScreenState
 class _RequirementCard extends StatefulWidget {
   final String title;
   final String category;
+  final String? imageUrl;
   final bool isRequired;
   final int quantity;
   final int validityDays;
@@ -858,6 +897,7 @@ class _RequirementCard extends StatefulWidget {
   const _RequirementCard({
     required this.title,
     required this.category,
+    required this.imageUrl,
     required this.isRequired,
     required this.quantity,
     required this.validityDays,
@@ -914,6 +954,21 @@ class _RequirementCardState extends State<_RequirementCard> {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
+                if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        widget.imageUrl!,
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.image_not_supported_outlined),
+                      ),
+                    ),
+                  ),
                 Chip(label: Text(widget.category)),
                 const SizedBox(width: 8),
                 TextButton.icon(
