@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -120,7 +121,7 @@ class _IssueConfirmScreenState extends State<IssueConfirmScreen> {
                   _warehouses.isEmpty
                       ? const Text('No warehouses available.', style: TextStyle(color: Colors.red))
                       : DropdownButtonFormField<String>(
-                          initialValue: _selectedWarehouseId,
+                          value: _selectedWarehouseId,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),

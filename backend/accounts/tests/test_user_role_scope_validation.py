@@ -21,7 +21,7 @@ class TestUserRoleScopeValidation:
         )
 
         assert resp.status_code == 400
-        assert "department" in resp.data
+        assert "department" in resp.data["error"]["detail"]
 
     def test_safety_role_requires_department(self):
         admin = UserFactory(email="admin_safety_scope@test.com", is_staff=True, is_superuser=True)
@@ -37,7 +37,7 @@ class TestUserRoleScopeValidation:
         )
 
         assert resp.status_code == 400
-        assert "department" in resp.data
+        assert "department" in resp.data["error"]["detail"]
 
     def test_employee_role_accepts_department_and_derives_site(self):
         admin = UserFactory(email="admin_emp_scope@test.com", is_staff=True, is_superuser=True)
@@ -54,8 +54,8 @@ class TestUserRoleScopeValidation:
         )
 
         assert resp.status_code == 201
-        assert resp.data["department"] == str(department.id)
-        assert resp.data["site"] == str(department.site.id)
+        assert str(resp.data["department"]) == str(department.id)
+        assert str(resp.data["site"]) == str(department.site.id)
 
     def test_manager_role_assignment_sets_department_manager(self):
         admin = UserFactory(email="admin_manager_link@test.com", is_staff=True, is_superuser=True)

@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -119,7 +120,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      initialValue: selectedRoleId,
+                      value: selectedRoleId,
                       items: _roles
                           .map(
                             (r) => DropdownMenuItem<String>(
@@ -140,7 +141,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String?>(
-                      initialValue: selectedDepartmentId,
+                      value: selectedDepartmentId,
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,

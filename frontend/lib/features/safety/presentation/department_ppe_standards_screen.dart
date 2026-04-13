@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -272,7 +273,7 @@ class _DepartmentPpeStandardsScreenState
         builder: (_, setDialog) => AlertDialog(
           title: const Text('Add PPE to Department'),
           content: DropdownButtonFormField<String>(
-            initialValue: selectedId,
+            value: selectedId,
             items: candidates
                 .map(
                   (item) => DropdownMenuItem<String>(
@@ -372,7 +373,7 @@ class _DepartmentPpeStandardsScreenState
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              initialValue: siteId,
+              value: siteId,
               items: _sites
                   .map(
                     (s) => DropdownMenuItem<String>(
@@ -462,7 +463,7 @@ class _DepartmentPpeStandardsScreenState
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  initialValue: category,
+                  value: category,
                   items: categories
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),

@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 
 import '../../../core/api/api_client.dart';
@@ -67,7 +68,7 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
               Text('Receive Stock', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: selectedPpeItemId,
+                value: selectedPpeItemId,
                 decoration: const InputDecoration(labelText: 'PPE Item'),
                 items: _ppeItems
                     .map((item) => DropdownMenuItem<String>(
@@ -79,7 +80,7 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                initialValue: selectedWarehouseId,
+                value: selectedWarehouseId,
                 decoration: const InputDecoration(labelText: 'Warehouse'),
                 items: _warehouses
                     .map((w) => DropdownMenuItem<String>(
