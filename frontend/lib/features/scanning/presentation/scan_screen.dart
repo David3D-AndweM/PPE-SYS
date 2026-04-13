@@ -17,6 +17,16 @@ class _ScanScreenState extends State<ScanScreen> {
   final _mineNumberCtrl = TextEditingController();
   final _employeeIdCtrl = TextEditingController();
   bool _processing = false;
+  int _selectedTab = 0;
+
+  void _onTabChanged(int index) {
+    setState(() => _selectedTab = index);
+    if (index == 0) {
+      _controller.start();
+    } else {
+      _controller.stop();
+    }
+  }
 
   @override
   void dispose() {
@@ -47,7 +57,9 @@ class _ScanScreenState extends State<ScanScreen> {
               content: Text('Scan error: $e'), backgroundColor: Colors.red),
         );
         setState(() => _processing = false);
-        _controller.start();
+        if (_selectedTab == 0) {
+          _controller.start();
+        }
       }
     }
   }
@@ -107,104 +119,127 @@ class _ScanScreenState extends State<ScanScreen> {
             onPressed: () => _controller.switchCamera(),
           ),
         ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                MobileScanner(controller: _controller, onDetect: _onDetect),
-                // Scan guide overlay
-                Center(
-                  child: Container(
-                    width: 260,
-                    height: 260,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment<int>(
+                  value: 0,
+                  icon: Icon(Icons.qr_code_scanner),
+                  label: Text('Scan'),
                 ),
-                Positioned(
-                  bottom: 24,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _processing
-                            ? 'Processing...'
-                            : 'Scan QR or use manual lookup below',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
+                ButtonSegment<int>(
+                  value: 1,
+                  icon: Icon(Icons.edit_note),
+                  label: Text('Manual'),
                 ),
               ],
+              selected: {_selectedTab},
+              onSelectionChanged: (selection) {
+                final selected = selection.first;
+                _onTabChanged(selected);
+              },
             ),
           ),
-          Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              children: [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Manual Lookup',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _slipNumberCtrl,
-                  textCapitalization: TextCapitalization.characters,
+        ),
+      ),
+      body: _selectedTab == 0 ? _buildScanTab() : _buildManualTab(context),
+    );
+  }
+
+  Widget _buildScanTab() {
+    return Stack(
+      children: [
+        MobileScanner(controller: _controller, onDetect: _onDetect),
+        Center(
+          child: Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white, width: 2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 24,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _processing
+                    ? 'Processing...'
+                    : 'Point camera at picking slip QR',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildManualTab(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      child: Column(
+        children: [
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Manual Lookup',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _slipNumberCtrl,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Picking Slip Number',
+              hintText: 'e.g. ABCD1234',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _mineNumberCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Picking Slip Number',
-                    hintText: 'e.g. ABCD1234',
+                    labelText: 'Mine Number',
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _mineNumberCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Mine Number',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _employeeIdCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Employee ID',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _processing ? null : _manualLookup,
-                    icon: const Icon(Icons.search),
-                    label: const Text('Find Picking Slip'),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _employeeIdCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Employee ID',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _processing ? null : _manualLookup,
+              icon: const Icon(Icons.search),
+              label: const Text('Find Picking Slip'),
             ),
           ),
         ],
