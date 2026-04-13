@@ -8,6 +8,11 @@ class Endpoints {
   static String get login => '$base/auth/login/';
   static String get tokenRefresh => '$base/auth/token/refresh/';
   static String get profile => '$base/auth/me/';
+  static String get users => '$base/auth/users/';
+  static String userDetail(String id) => '$base/auth/users/$id/';
+  static String userRoles(String userId) => '$base/auth/users/$userId/roles/';
+  static String get roles => '$base/auth/roles/';
+  static String get passwordReset => '$base/auth/password-reset/';
 
   // My PPE
   static String get myPpe => '$base/ppe/my-ppe/';
@@ -15,6 +20,7 @@ class Endpoints {
 
   // PPE catalogue
   static String get ppeItems => '$base/ppe/items/';
+  static String ppeItemDetail(String id) => '$base/ppe/items/$id/';
   static String get ppeConfigurations => '$base/ppe/configurations/';
   static String ppeConfigurationDetail(String id) =>
       '$base/ppe/configurations/$id/';
@@ -44,6 +50,8 @@ class Endpoints {
   // Organization
   static String get employees => '$base/org/employees/';
   static String get departments => '$base/org/departments/';
+  static String departmentDetail(String id) => '$base/org/departments/$id/';
+  static String get sites => '$base/org/sites/';
 
   // Inventory
   static String get stock => '$base/inventory/stock/';

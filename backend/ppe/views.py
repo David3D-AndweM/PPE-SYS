@@ -1,10 +1,14 @@
 from django.db import models
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.permissions import IsAdmin, IsAdminOrManagerOrSafety
+from core.permissions import IsAdminOrManagerOrSafety
 
 from .models import DepartmentPPERequirement, EmployeePPE, PPEConfiguration, PPEItem
 from .serializers import (
@@ -23,14 +27,14 @@ class PPEItemListCreateView(ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAdmin()]
+            return [IsAdminOrManagerOrSafety()]
         return [IsAuthenticated()]
 
 
-class PPEItemDetailView(RetrieveUpdateAPIView):
+class PPEItemDetailView(RetrieveUpdateDestroyAPIView):
     queryset = PPEItem.objects.all()
     serializer_class = PPEItemSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
 
 class PPEConfigurationListCreateView(ListCreateAPIView):
@@ -48,7 +52,10 @@ class PPEConfigurationListCreateView(ListCreateAPIView):
             qs = qs.filter(scope_type=scope_type)
         # Non-admins should only ever see configs for departments they can manage.
         user = self.request.user
-        if not (user.is_superuser or "Admin" in set(user.get_roles())):
+        roles = set(user.get_roles())
+        if "Safety" in roles:
+            return qs.filter(scope_type="department")
+        if not (user.is_superuser or "Admin" in roles):
             from organization.models import Department
 
             allowed_dept_ids = Department.objects.filter(
@@ -70,7 +77,10 @@ class DepartmentPPERequirementListCreateView(ListCreateAPIView):
         if dept:
             qs = qs.filter(department_id=dept)
         user = self.request.user
-        if not (user.is_superuser or "Admin" in set(user.get_roles())):
+        roles = set(user.get_roles())
+        if "Safety" in roles:
+            return qs
+        if not (user.is_superuser or "Admin" in roles):
             qs = qs.filter(
                 models.Q(department__manager=user)
                 | models.Q(department__safety_officer=user)
