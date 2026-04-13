@@ -82,9 +82,7 @@ class PPEConfigurationSerializer(serializers.ModelSerializer):
         scope_type = attrs.get("scope_type", getattr(self.instance, "scope_type", None))
         scope_id = attrs.get("scope_id", getattr(self.instance, "scope_id", None))
         if scope_type != "department" or not scope_id:
-            raise serializers.ValidationError(
-                "Only Admin can create/update system or site scoped PPE configurations."
-            )
+            raise serializers.ValidationError("Only Admin can create/update system or site scoped PPE configurations.")
 
         from organization.models import Department
 

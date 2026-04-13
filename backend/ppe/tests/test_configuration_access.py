@@ -50,4 +50,3 @@ class TestPPEConfigurationAccess:
             format="json",
         )
         assert resp.status_code == 400
-

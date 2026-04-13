@@ -177,8 +177,12 @@ class TestPickingSlipLifecycle:
             is_active=True,
         )
 
-        DepartmentPPERequirement.objects.create(department=department, ppe_item=valid_item, is_required=True, quantity=1)
-        DepartmentPPERequirement.objects.create(department=department, ppe_item=expired_item, is_required=True, quantity=2)
+        DepartmentPPERequirement.objects.create(
+            department=department, ppe_item=valid_item, is_required=True, quantity=1
+        )
+        DepartmentPPERequirement.objects.create(
+            department=department, ppe_item=expired_item, is_required=True, quantity=2
+        )
 
         EmployeePPE.objects.create(employee=employee, ppe_item=valid_item, status=EmployeePPEStatus.VALID)
         EmployeePPE.objects.create(employee=employee, ppe_item=expired_item, status=EmployeePPEStatus.EXPIRED)

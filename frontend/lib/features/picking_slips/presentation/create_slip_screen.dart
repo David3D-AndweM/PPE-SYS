@@ -163,6 +163,8 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
     }).length;
   }
 
+  bool get _isExceptionFlow => _requestType == 'lost' || _requestType == 'damaged';
+
   List<Map<String, dynamic>> get _selectedItems => _quantities.entries
       .where((e) => e.value > 0)
       .map((e) => {'ppe_item_id': e.key, 'quantity': e.value})
@@ -344,10 +346,12 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _requestType == 'expiry' ? 'Your PPE Status' : 'Select Items',
+                (_requestType == 'expiry' || _requestType == 'new')
+                    ? 'Items will be generated automatically'
+                    : 'Select Items',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
-              if (_selectedCount > 0)
+              if (_isExceptionFlow && _selectedCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
@@ -378,7 +382,6 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
                 final expiry     = assignment?['expiry_date'] as String?;
                 final isAutoSelected = _requestType == 'expiry' &&
                     (status == 'expired' || status == 'expiring_soon');
-                final isExceptionFlow = _requestType == 'lost' || _requestType == 'damaged';
 
                 return Column(children: [
                   if (i > 0) const Divider(height: 1),
@@ -467,40 +470,62 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
                         ),
 
                         // Right: stepper
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            iconSize: 22,
-                            color: qty > 0 ? Colors.red.shade400 : Colors.grey.shade300,
-                            onPressed: (isExceptionFlow && qty > 0) ? () => _decrement(id) : null,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                          ),
-                          SizedBox(
-                            width: 30,
+                        if (_isExceptionFlow)
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              iconSize: 22,
+                              color: qty > 0 ? Colors.red.shade400 : Colors.grey.shade300,
+                              onPressed: qty > 0 ? () => _decrement(id) : null,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            ),
+                            SizedBox(
+                              width: 30,
+                              child: Text(
+                                '$qty',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: qty > 0 ? FontWeight.bold : FontWeight.normal,
+                                  color: qty > 0
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              iconSize: 22,
+                              color: qty < 10
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey.shade300,
+                              onPressed: qty < 10 ? () => _increment(id) : null,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            ),
+                          ])
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
                             child: Text(
-                              '$qty',
-                              textAlign: TextAlign.center,
+                              (status == 'expired' || status == 'expiring_soon' || status == 'pending_issue')
+                                  ? 'DUE'
+                                  : 'OK',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: qty > 0 ? FontWeight.bold : FontWeight.normal,
-                                color: qty > 0
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: (status == 'expired' || status == 'expiring_soon' || status == 'pending_issue')
+                                    ? Colors.red.shade700
+                                    : Colors.grey.shade700,
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            iconSize: 22,
-                            color: qty < 10
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey.shade300,
-                            onPressed: (isExceptionFlow && qty < 10) ? () => _increment(id) : null,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                          ),
-                        ]),
                       ]),
                     ),
                   ),
@@ -533,7 +558,7 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton.icon(
-              onPressed: (_submitting || ((_requestType == 'lost' || _requestType == 'damaged') && _selectedCount == 0))
+              onPressed: (_submitting || (_isExceptionFlow && _selectedCount == 0))
                   ? null
                   : _submit,
               icon: _submitting
@@ -551,7 +576,7 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             ),
           ),
 
-          if (_selectedCount == 0)
+          if (_isExceptionFlow && _selectedCount == 0)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(

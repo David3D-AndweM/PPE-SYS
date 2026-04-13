@@ -130,8 +130,7 @@ def build_auto_items_for_employee(employee, request_type):
         return []
 
     by_item_id = {
-        str(ep.ppe_item_id): ep
-        for ep in EmployeePPE.objects.filter(employee=employee).select_related("ppe_item").all()
+        str(ep.ppe_item_id): ep for ep in EmployeePPE.objects.filter(employee=employee).select_related("ppe_item").all()
     }
 
     items = []

@@ -50,6 +50,7 @@ class PPEConfigurationListCreateView(ListCreateAPIView):
         user = self.request.user
         if not (user.is_superuser or "Admin" in set(user.get_roles())):
             from organization.models import Department
+
             allowed_dept_ids = Department.objects.filter(
                 models.Q(manager=user) | models.Q(safety_officer=user) | models.Q(user_roles__user=user),
                 is_active=True,
