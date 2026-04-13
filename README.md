@@ -63,12 +63,12 @@ make seed
 | Email | Password | Role |
 |---|---|---|
 | admin@auricmines.com | Admin1234! | Admin (superuser) |
-| manager1@auricmines.com | — | Manager (Shaft 12) |
-| safety1@auricmines.com | — | Safety Officer |
-| store1@auricmines.com | — | Store Officer |
-| emp001@auricmines.com | — | Employee AM-001 |
+| manager1@auricmines.com | Demo1234! | Manager (Shaft 12) |
+| safety1@auricmines.com | Demo1234! | Safety Officer |
+| store1@auricmines.com | Demo1234! | Store Officer |
+| emp001@auricmines.com | Demo1234! | Employee AM-001 |
 
-> **Note:** Fixture users have placeholder password hashes. Use `make superuser` or the admin panel to set real passwords for the non-superuser accounts, or update the fixture to use `django.contrib.auth.hashers.make_password("yourpassword")`.
+> **Note:** `make seed` now assigns `Demo1234!` to all fixture users in `fixtures/08_users.json` so seeded accounts can authenticate immediately.
 
 ---
 

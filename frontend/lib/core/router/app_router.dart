@@ -20,6 +20,7 @@ import '../../features/admin/presentation/admin_audit_log_screen.dart';
 import '../../features/admin/presentation/admin_inventory_screen.dart';
 import '../../features/admin/presentation/admin_ppe_catalogue_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
+import '../../features/safety/presentation/department_ppe_standards_screen.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -32,7 +33,6 @@ class AppRouter {
     redirect: _redirect,
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-
       ShellRoute(
         builder: (context, state, child) => _AppShell(
           location: state.matchedLocation,
@@ -41,33 +41,54 @@ class AppRouter {
         routes: [
           // Employee
           GoRoute(path: '/my-ppe', builder: (_, __) => const MyPpeScreen()),
-          GoRoute(path: '/my-ppe/slips', builder: (_, __) => const SlipListScreen()),
-          GoRoute(path: '/my-ppe/slips/create', builder: (_, __) => const CreateSlipScreen()),
+          GoRoute(
+              path: '/my-ppe/slips',
+              builder: (_, __) => const SlipListScreen()),
+          GoRoute(
+              path: '/my-ppe/slips/create',
+              builder: (_, __) => const CreateSlipScreen()),
           GoRoute(
             path: '/my-ppe/slips/:id',
-            builder: (_, state) => SlipDetailScreen(slipId: state.pathParameters['id']!),
+            builder: (_, state) =>
+                SlipDetailScreen(slipId: state.pathParameters['id']!),
           ),
 
           // Store officer
           GoRoute(path: '/store/scan', builder: (_, __) => const ScanScreen()),
           GoRoute(
             path: '/store/issue-confirm',
-            builder: (_, state) =>
-                IssueConfirmScreen(slipData: state.extra as Map<String, dynamic>),
+            builder: (_, state) => IssueConfirmScreen(
+                slipData: state.extra as Map<String, dynamic>),
           ),
 
           // Manager / Safety
-          GoRoute(path: '/approvals', builder: (_, __) => const ApprovalsScreen()),
-          GoRoute(path: '/compliance', builder: (_, __) => const ComplianceScreen()),
+          GoRoute(
+              path: '/approvals', builder: (_, __) => const ApprovalsScreen()),
+          GoRoute(
+              path: '/compliance',
+              builder: (_, __) => const ComplianceScreen()),
+          GoRoute(
+            path: '/safety/standards',
+            builder: (_, __) => const DepartmentPpeStandardsScreen(),
+          ),
 
           // Admin
-          GoRoute(path: '/admin', builder: (_, __) => const AdminDashboardScreen()),
-          GoRoute(path: '/admin/catalogue', builder: (_, __) => const AdminPpeCatalogueScreen()),
-          GoRoute(path: '/admin/inventory', builder: (_, __) => const AdminInventoryScreen()),
-          GoRoute(path: '/admin/audit', builder: (_, __) => const AdminAuditLogScreen()),
+          GoRoute(
+              path: '/admin', builder: (_, __) => const AdminDashboardScreen()),
+          GoRoute(
+              path: '/admin/catalogue',
+              builder: (_, __) => const AdminPpeCatalogueScreen()),
+          GoRoute(
+              path: '/admin/inventory',
+              builder: (_, __) => const AdminInventoryScreen()),
+          GoRoute(
+              path: '/admin/audit',
+              builder: (_, __) => const AdminAuditLogScreen()),
 
           // Shared
-          GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
+          GoRoute(
+              path: '/notifications',
+              builder: (_, __) => const NotificationsScreen()),
           GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
         ],
       ),
@@ -89,7 +110,9 @@ class AppRouter {
       return isLogin ? null : '/login';
     }
 
-    if (auth is! AuthAuthenticated) return null;
+    if (auth is! AuthAuthenticated) {
+      return null;
+    }
 
     // On login page → go to role home
     if (isLogin) return _homeForRole(auth.primaryRole);
@@ -97,42 +120,53 @@ class AppRouter {
     // Shared routes accessible to all authenticated users
     if (loc == '/notifications' || loc == '/profile') return null;
 
-    // PPE slip routes are accessible to every role (any employee can request PPE)
-    if (loc.startsWith('/my-ppe/slips')) return null;
-
     // Role-based guards — prevent wrong role landing on wrong section
     final role = auth.primaryRole;
     switch (role) {
       case 'Admin':
-        return null;
+        if (loc.startsWith('/admin') ||
+            loc.startsWith('/approvals') ||
+            loc.startsWith('/compliance')) {
+          return null;
+        }
+        return '/admin';
 
       case 'Manager':
-        if (loc.startsWith('/compliance') ||
-            loc.startsWith('/approvals') ||
-            loc.startsWith('/my-ppe')) return null;
+        if (loc.startsWith('/compliance') || loc.startsWith('/approvals')) {
+          return null;
+        }
         return '/compliance';
 
       case 'Safety':
-        if (loc.startsWith('/approvals') || loc.startsWith('/compliance')) return null;
-        return '/approvals';
+        if (loc.startsWith('/safety/standards') ||
+            loc.startsWith('/approvals') ||
+            loc.startsWith('/compliance')) {
+          return null;
+        }
+        return '/safety/standards';
 
       case 'Store':
         if (loc.startsWith('/store')) return null;
         return '/store/scan';
 
       default: // Employee
-        if (loc.startsWith('/my-ppe') || loc.startsWith('/notifications')) return null;
+        if (loc.startsWith('/my-ppe')) return null;
         return '/my-ppe';
     }
   }
 
   String _homeForRole(String role) {
     switch (role) {
-      case 'Admin':    return '/admin';
-      case 'Manager':  return '/compliance';
-      case 'Safety':   return '/approvals';
-      case 'Store':    return '/store/scan';
-      default:         return '/my-ppe';
+      case 'Admin':
+        return '/admin';
+      case 'Manager':
+        return '/compliance';
+      case 'Safety':
+        return '/safety/standards';
+      case 'Store':
+        return '/store/scan';
+      default:
+        return '/my-ppe';
     }
   }
 }
@@ -148,7 +182,9 @@ class _AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthBloc>().state;
-    if (auth is! AuthAuthenticated) return child;
+    if (auth is! AuthAuthenticated) {
+      return child;
+    }
 
     final items = _navItemsForRole(auth.primaryRole);
 
@@ -198,7 +234,9 @@ class _AppShell extends StatelessWidget {
     }
     // Prefix match (nested routes highlight parent tab)
     for (int i = 0; i < items.length; i++) {
-      if (location.startsWith(items[i].route) && items[i].route.length > 1) return i;
+      if (location.startsWith(items[i].route) && items[i].route.length > 1) {
+        return i;
+      }
     }
     return 0;
   }
@@ -207,42 +245,62 @@ class _AppShell extends StatelessWidget {
     switch (role) {
       case 'Admin':
         return [
-          _NavItem(Icons.dashboard_outlined,       Icons.dashboard,       'Dashboard',  '/admin'),
-          _NavItem(Icons.people_outline,            Icons.people,          'Employees',  '/compliance'),
-          _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
-          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
-          _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
-          _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
+          const _NavItem(
+              Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', '/admin'),
+          const _NavItem(
+              Icons.people_outline, Icons.people, 'Compliance', '/compliance'),
+          const _NavItem(Icons.fact_check_outlined, Icons.fact_check,
+              'Approvals', '/approvals'),
+          const _NavItem(Icons.inventory_2_outlined, Icons.inventory_2,
+              'Inventory', '/admin/inventory'),
+          const _NavItem(Icons.notifications_outlined, Icons.notifications,
+              'Alerts', '/notifications'),
+          const _NavItem(
+              Icons.person_outline, Icons.person, 'Profile', '/profile'),
         ];
       case 'Manager':
         return [
-          _NavItem(Icons.people_outline,            Icons.people,          'Compliance', '/compliance'),
-          _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
-          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
-          _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
-          _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
+          const _NavItem(
+              Icons.people_outline, Icons.people, 'Compliance', '/compliance'),
+          const _NavItem(Icons.fact_check_outlined, Icons.fact_check,
+              'Approvals', '/approvals'),
+          const _NavItem(Icons.notifications_outlined, Icons.notifications,
+              'Alerts', '/notifications'),
+          const _NavItem(
+              Icons.person_outline, Icons.person, 'Profile', '/profile'),
         ];
       case 'Safety':
         return [
-          _NavItem(Icons.fact_check_outlined,       Icons.fact_check,      'Approvals',  '/approvals'),
-          _NavItem(Icons.people_outline,            Icons.people,          'Compliance', '/compliance'),
-          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
-          _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
-          _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
+          const _NavItem(Icons.tune_outlined, Icons.tune, 'Standards',
+              '/safety/standards'),
+          const _NavItem(Icons.fact_check_outlined, Icons.fact_check,
+              'Approvals', '/approvals'),
+          const _NavItem(
+              Icons.people_outline, Icons.people, 'Compliance', '/compliance'),
+          const _NavItem(Icons.notifications_outlined, Icons.notifications,
+              'Alerts', '/notifications'),
+          const _NavItem(
+              Icons.person_outline, Icons.person, 'Profile', '/profile'),
         ];
       case 'Store':
         return [
-          _NavItem(Icons.qr_code_scanner,          Icons.qr_code_scanner, 'Scan',       '/store/scan'),
-          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
-          _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
-          _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
+          const _NavItem(Icons.qr_code_scanner, Icons.qr_code_scanner, 'Scan',
+              '/store/scan'),
+          const _NavItem(Icons.notifications_outlined, Icons.notifications,
+              'Alerts', '/notifications'),
+          const _NavItem(
+              Icons.person_outline, Icons.person, 'Profile', '/profile'),
         ];
       default: // Employee
         return [
-          _NavItem(Icons.security_outlined,         Icons.security,        'My PPE',     '/my-ppe'),
-          _NavItem(Icons.list_alt_outlined,         Icons.list_alt,        'Requests',   '/my-ppe/slips'),
-          _NavItem(Icons.notifications_outlined,    Icons.notifications,   'Alerts',     '/notifications'),
-          _NavItem(Icons.person_outline,            Icons.person,          'Profile',    '/profile'),
+          const _NavItem(
+              Icons.security_outlined, Icons.security, 'My PPE', '/my-ppe'),
+          const _NavItem(Icons.list_alt_outlined, Icons.list_alt, 'Requests',
+              '/my-ppe/slips'),
+          const _NavItem(Icons.notifications_outlined, Icons.notifications,
+              'Alerts', '/notifications'),
+          const _NavItem(
+              Icons.person_outline, Icons.person, 'Profile', '/profile'),
         ];
     }
   }

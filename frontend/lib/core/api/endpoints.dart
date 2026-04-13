@@ -15,6 +15,9 @@ class Endpoints {
 
   // PPE catalogue
   static String get ppeItems => '$base/ppe/items/';
+  static String get ppeRequirements => '$base/ppe/requirements/';
+  static String ppeRequirementDetail(String id) =>
+      '$base/ppe/requirements/$id/';
   static String get assignments => '$base/ppe/assignments/';
 
   // Picking slips
