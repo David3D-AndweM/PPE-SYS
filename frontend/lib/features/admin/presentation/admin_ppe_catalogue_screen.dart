@@ -127,16 +127,14 @@ class _AdminPpeCatalogueScreenState extends State<AdminPpeCatalogueScreen> {
                           'default_validity_days': int.tryParse(validityCtrl.text.trim()),
                         'is_critical': isCritical,
                       });
-                      if (mounted) {
-                        Navigator.of(sheetCtx).pop();
-                        _load();
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      Navigator.of(sheetCtx).pop();
+                      _load();
                     } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
-                        );
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                      );
                     }
                   },
                   child: const Text('Add Item'),

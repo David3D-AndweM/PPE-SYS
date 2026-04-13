@@ -133,7 +133,7 @@ class _PpeCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.statusColor(data['status'] ?? '').withOpacity(0.15),
+          backgroundColor: AppTheme.statusColor(data['status'] ?? '').withValues(alpha: 0.15),
           child: Icon(
             Icons.security,
             color: AppTheme.statusColor(data['status'] ?? ''),

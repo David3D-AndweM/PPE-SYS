@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 
 import '../../../core/api/api_client.dart';
@@ -112,22 +113,20 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
                           'quantity': qty,
                         },
                       );
-                      if (mounted) {
-                        Navigator.of(sheetCtx).pop();
-                        _load();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Stock received successfully.'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      Navigator.of(sheetCtx).pop();
+                      _load();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Stock received successfully.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
                     } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
-                        );
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                      );
                     }
                   },
                   child: const Text('Receive'),

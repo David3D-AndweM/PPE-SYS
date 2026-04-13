@@ -3,7 +3,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.permissions import IsAdmin, IsAdminOrManager
+from core.permissions import IsAdmin, IsAdminOrManager, IsAdminOrManagerOrSafety
 
 from .models import Department, Employee, Organization, Site
 from .serializers import (
@@ -30,7 +30,12 @@ class OrganizationDetailView(RetrieveUpdateAPIView):
 class SiteListCreateView(ListCreateAPIView):
     queryset = Site.objects.select_related("organization").filter(is_active=True)
     serializer_class = SiteSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrManagerOrSafety]
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAdmin()]
+        return [IsAdminOrManagerOrSafety()]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -49,7 +54,7 @@ class SiteDetailView(RetrieveUpdateAPIView):
 class DepartmentListCreateView(ListCreateAPIView):
     queryset = Department.objects.select_related("site", "manager", "safety_officer")
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
     def get_queryset(self):
         qs = super().get_queryset().filter(is_active=True)
@@ -62,13 +67,18 @@ class DepartmentListCreateView(ListCreateAPIView):
 class DepartmentDetailView(RetrieveUpdateAPIView):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
 
 class EmployeeListCreateView(ListCreateAPIView):
     queryset = Employee.objects.select_related("user", "department__site")
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAdminOrManager()]
+        return [IsAdminOrManagerOrSafety()]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -87,7 +97,12 @@ class EmployeeListCreateView(ListCreateAPIView):
 class EmployeeDetailView(RetrieveUpdateAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
+
+    def get_permissions(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return [IsAdminOrManager()]
+        return [IsAdminOrManagerOrSafety()]
 
 
 class EmployeeTransferView(APIView):
