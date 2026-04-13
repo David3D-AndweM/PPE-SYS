@@ -16,9 +16,10 @@ def _user_can_manage_department(user, department) -> bool:
     roles = set(user.get_roles())
     if "Admin" in roles:
         return True
-    if "Manager" in roles and getattr(department, "manager_id", None) == user.id:
+    # Safety owns department PPE standards across departments.
+    if "Safety" in roles:
         return True
-    if "Safety" in roles and getattr(department, "safety_officer_id", None) == user.id:
+    if "Manager" in roles and getattr(department, "manager_id", None) == user.id:
         return True
 
     # Fallback: allow if role is explicitly scoped to this department or its site.
@@ -45,6 +46,7 @@ class PPEItemSerializer(serializers.ModelSerializer):
             "is_critical",
             "default_validity_days",
             "requires_serial_tracking",
+            "image",
             "is_active",
         ]
         read_only_fields = ["id"]

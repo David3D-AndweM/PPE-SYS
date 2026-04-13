@@ -36,6 +36,7 @@ class PPEItem(TimeStampedModel):
         default=False,
         help_text="True for items like helmets that need individual serial numbers.",
     )
+    image = models.ImageField(upload_to="ppe-items/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
