@@ -20,6 +20,7 @@ class Endpoints {
   // Picking slips
   static String get pickingSlips => '$base/picking/slips/';
   static String get createPickingSlip => '$base/picking/slips/create/';
+  static String get autoCreatePickingSlip => '$base/picking/slips/auto-create/';
   static String get validateScan => '$base/picking/slips/validate-scan/';
   static String get finalizeIssue => '$base/picking/slips/finalize-issue/';
 

@@ -122,11 +122,12 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
     setState(() {
       for (final item in _catalogue) {
         final id     = item['id'] as String;
-        final status = _myStatus[id]?['status'] as String?;
-        if (_requestType == 'expiry' &&
-            (status == 'expired' || status == 'expiring_soon')) {
-          _quantities[id] = 1;
+        // Manual selection is only relevant for exception flows.
+        // For expiry/new requests the backend generates items automatically.
+        if (_requestType == 'lost' || _requestType == 'damaged') {
+          _quantities[id] = 0;
         } else {
+          // Keep quantities cleared to avoid implying that UI selection is used.
           _quantities[id] = 0;
         }
       }
@@ -162,6 +163,8 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
     }).length;
   }
 
+  bool get _isExceptionFlow => _requestType == 'lost' || _requestType == 'damaged';
+
   List<Map<String, dynamic>> get _selectedItems => _quantities.entries
       .where((e) => e.value > 0)
       .map((e) => {'ppe_item_id': e.key, 'quantity': e.value})
@@ -178,14 +181,6 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
       });
 
   Future<void> _submit() async {
-    if (_selectedCount == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Select at least one item before submitting.'),
-        backgroundColor: Colors.orange,
-      ));
-      return;
-    }
-
     final auth = context.read<AuthBloc>().state;
     if (auth is! AuthAuthenticated || auth.employeeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -197,12 +192,28 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
 
     setState(() => _submitting = true);
     try {
-      await sl<PickingRepository>().createSlip({
-        'employee_id': auth.employeeId,
-        'request_type': _requestType,
-        'notes': _notesCtrl.text.trim(),
-        'items': _selectedItems,
-      });
+      // For standard flows, rely on backend to generate the due items.
+      if (_requestType == 'expiry' || _requestType == 'new') {
+        await sl<PickingRepository>().autoCreateSlip(
+          employeeId: auth.employeeId!,
+          requestType: _requestType,
+          notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        );
+      } else {
+        if (_selectedCount == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Select at least one item before submitting.'),
+            backgroundColor: Colors.orange,
+          ));
+          return;
+        }
+        await sl<PickingRepository>().createSlip({
+          'employee_id': auth.employeeId,
+          'request_type': _requestType,
+          'notes': _notesCtrl.text.trim(),
+          'items': _selectedItems,
+        });
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Request submitted — awaiting approval.'),
@@ -335,10 +346,12 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _requestType == 'expiry' ? 'Your PPE Status' : 'Select Items',
+                (_requestType == 'expiry' || _requestType == 'new')
+                    ? 'Items will be generated automatically'
+                    : 'Select Items',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
-              if (_selectedCount > 0)
+              if (_isExceptionFlow && _selectedCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
@@ -457,40 +470,62 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
                         ),
 
                         // Right: stepper
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            iconSize: 22,
-                            color: qty > 0 ? Colors.red.shade400 : Colors.grey.shade300,
-                            onPressed: qty > 0 ? () => _decrement(id) : null,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                          ),
-                          SizedBox(
-                            width: 30,
+                        if (_isExceptionFlow)
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              iconSize: 22,
+                              color: qty > 0 ? Colors.red.shade400 : Colors.grey.shade300,
+                              onPressed: qty > 0 ? () => _decrement(id) : null,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            ),
+                            SizedBox(
+                              width: 30,
+                              child: Text(
+                                '$qty',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: qty > 0 ? FontWeight.bold : FontWeight.normal,
+                                  color: qty > 0
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              iconSize: 22,
+                              color: qty < 10
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey.shade300,
+                              onPressed: qty < 10 ? () => _increment(id) : null,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            ),
+                          ])
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
                             child: Text(
-                              '$qty',
-                              textAlign: TextAlign.center,
+                              (status == 'expired' || status == 'expiring_soon' || status == 'pending_issue')
+                                  ? 'DUE'
+                                  : 'OK',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: qty > 0 ? FontWeight.bold : FontWeight.normal,
-                                color: qty > 0
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: (status == 'expired' || status == 'expiring_soon' || status == 'pending_issue')
+                                    ? Colors.red.shade700
+                                    : Colors.grey.shade700,
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            iconSize: 22,
-                            color: qty < 10
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey.shade300,
-                            onPressed: qty < 10 ? () => _increment(id) : null,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                          ),
-                        ]),
                       ]),
                     ),
                   ),
@@ -523,24 +558,30 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton.icon(
-              onPressed: (_submitting || _selectedCount == 0) ? null : _submit,
+              onPressed: (_submitting || (_isExceptionFlow && _selectedCount == 0))
+                  ? null
+                  : _submit,
               icon: _submitting
                   ? const SizedBox(width: 18, height: 18,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Icon(Icons.send_rounded),
               label: Text(
-                _submitting ? 'Submitting...' : 'Submit Request ($_selectedCount item${_selectedCount == 1 ? '' : 's'})',
+                _submitting
+                    ? 'Submitting...'
+                    : (_requestType == 'expiry' || _requestType == 'new')
+                        ? 'Submit Smart Request'
+                        : 'Submit Request ($_selectedCount item${_selectedCount == 1 ? '' : 's'})',
                 style: const TextStyle(fontSize: 15),
               ),
             ),
           ),
 
-          if (_selectedCount == 0)
+          if (_isExceptionFlow && _selectedCount == 0)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                _requestType == 'expiry' && _autoDetectedCount == 0
-                    ? 'No expired PPE detected. Manually add items if needed.'
+                (_requestType == 'expiry' || _requestType == 'new')
+                    ? 'This request is generated automatically from your PPE status and department rules.'
                     : 'Adjust quantities above to enable submit.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
@@ -591,7 +632,7 @@ class _SmartBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '$count item${count == 1 ? '' : 's'} detected and pre-selected',
+              '$count item${count == 1 ? '' : 's'} detected as due for renewal',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.red.shade800,
@@ -609,7 +650,7 @@ class _SmartBanner extends StatelessWidget {
         ],
         const SizedBox(height: 4),
         Text(
-          'Quantities are pre-set to 1. Adjust if you need more, or deselect items that don\'t apply.',
+          'Submitting will create a smart request. The backend generates the slip items automatically from your PPE status and department rules.',
           style: TextStyle(fontSize: 12, color: Colors.red.shade600),
         ),
       ]),

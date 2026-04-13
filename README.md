@@ -113,6 +113,7 @@ GET  /api/v1/ppe/assignments/?employee=   → all employee PPE
 ```
 GET  /api/v1/picking/slips/               → list slips
 POST /api/v1/picking/slips/create/        → create new slip
+POST /api/v1/picking/slips/auto-create/   → create "smart" slip (backend generates items)
 GET  /api/v1/picking/slips/:id/           → slip detail + QR image
 POST /api/v1/picking/slips/validate-scan/ → validate scanned QR
 POST /api/v1/picking/slips/finalize-issue/ → execute issue, deduct stock
