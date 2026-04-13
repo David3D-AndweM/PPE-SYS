@@ -146,7 +146,7 @@ class ValidateScanView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            slip = validate_scan(serializer.validated_data["qr_data"], request.user)
+            slip = validate_scan(serializer.validated_data, request.user)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

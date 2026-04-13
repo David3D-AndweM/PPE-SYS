@@ -91,7 +91,31 @@ class AutoCreatePickingSlipSerializer(serializers.Serializer):
 
 
 class ScanValidateSerializer(serializers.Serializer):
-    qr_data = serializers.CharField()
+    qr_data = serializers.CharField(required=False, allow_blank=True)
+    slip_number = serializers.CharField(required=False, allow_blank=True)
+    mine_number = serializers.CharField(required=False, allow_blank=True)
+    employee_id = serializers.UUIDField(required=False)
+
+    def validate(self, attrs):
+        qr_data = (attrs.get("qr_data") or "").strip()
+        slip_number = (attrs.get("slip_number") or "").strip()
+        mine_number = (attrs.get("mine_number") or "").strip()
+        employee_id = attrs.get("employee_id")
+
+        if qr_data:
+            return {"qr_data": qr_data}
+
+        if not slip_number:
+            raise serializers.ValidationError("Provide qr_data or slip_number with mine_number/employee_id.")
+        if not mine_number and not employee_id:
+            raise serializers.ValidationError("Provide mine_number or employee_id when using slip_number lookup.")
+
+        cleaned = {"slip_number": slip_number.upper()}
+        if mine_number:
+            cleaned["mine_number"] = mine_number
+        if employee_id:
+            cleaned["employee_id"] = employee_id
+        return cleaned
 
 
 class FinalizeIssueSerializer(serializers.Serializer):
