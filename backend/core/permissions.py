@@ -57,6 +57,18 @@ class IsAdminOrManager(BasePermission):
         )
 
 
+class IsAdminOrManagerOrSafety(BasePermission):
+    message = "Admin, Manager, or Safety Officer role required."
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (
+            request.user.is_superuser
+            or _has_role(request, "Admin")
+            or _has_role(request, "Manager")
+            or _has_role(request, "Safety")
+        )
+
+
 class IsApprover(BasePermission):
     """Manager or Safety Officer — both can participate in approvals."""
 

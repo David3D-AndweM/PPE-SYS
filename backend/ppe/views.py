@@ -1,9 +1,10 @@
+from django.db import models
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.permissions import IsAdmin, IsAdminOrManager
+from core.permissions import IsAdmin, IsAdminOrManagerOrSafety
 
 from .models import DepartmentPPERequirement, EmployeePPE, PPEConfiguration, PPEItem
 from .serializers import (
@@ -35,7 +36,7 @@ class PPEItemDetailView(RetrieveUpdateAPIView):
 class PPEConfigurationListCreateView(ListCreateAPIView):
     queryset = PPEConfiguration.objects.select_related("ppe_item")
     serializer_class = PPEConfigurationSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -45,32 +46,49 @@ class PPEConfigurationListCreateView(ListCreateAPIView):
             qs = qs.filter(ppe_item_id=ppe_item)
         if scope_type:
             qs = qs.filter(scope_type=scope_type)
+        # Non-admins should only ever see configs for departments they can manage.
+        user = self.request.user
+        if not (user.is_superuser or "Admin" in set(user.get_roles())):
+            from organization.models import Department
+
+            allowed_dept_ids = Department.objects.filter(
+                models.Q(manager=user) | models.Q(safety_officer=user) | models.Q(user_roles__user=user),
+                is_active=True,
+            ).values_list("id", flat=True)
+            qs = qs.filter(scope_type="department", scope_id__in=list(allowed_dept_ids))
         return qs
 
 
 class DepartmentPPERequirementListCreateView(ListCreateAPIView):
     queryset = DepartmentPPERequirement.objects.select_related("department", "ppe_item")
     serializer_class = DepartmentPPERequirementSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
     def get_queryset(self):
         qs = super().get_queryset()
         dept = self.request.query_params.get("department")
         if dept:
             qs = qs.filter(department_id=dept)
+        user = self.request.user
+        if not (user.is_superuser or "Admin" in set(user.get_roles())):
+            qs = qs.filter(
+                models.Q(department__manager=user)
+                | models.Q(department__safety_officer=user)
+                | models.Q(department__user_roles__user=user)
+            )
         return qs
 
 
 class PPEConfigurationDetailView(RetrieveUpdateDestroyAPIView):
     queryset = PPEConfiguration.objects.select_related("ppe_item").all()
     serializer_class = PPEConfigurationSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
 
 class DepartmentPPERequirementDetailView(RetrieveUpdateDestroyAPIView):
     queryset = DepartmentPPERequirement.objects.select_related("department", "ppe_item").all()
     serializer_class = DepartmentPPERequirementSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrManagerOrSafety]
 
 
 class EmployeePPEListView(ListAPIView):

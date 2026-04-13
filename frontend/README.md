@@ -1,17 +1,50 @@
-# ppe_system
+# EPPEP Flutter Client
 
-A new Flutter project.
+Flutter mobile client for the **Enterprise PPE Compliance & Issuing Platform**.
 
-## Getting Started
+## What this app does
 
-This project is a starting point for a Flutter application.
+- **Employee**: view assigned PPE + compliance, submit PPE requests
+- **Manager / Safety Officer**: review and approve/reject requests
+- **Store Officer**: scan picking slip QR, finalise issuance
+- **Admin**: manage PPE catalogue, inventory, audit logs
 
-A few resources to get you started if this is your first Flutter project:
+## Environment configuration
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Create or edit `frontend/.env`:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# Release trigger
+```
+API_BASE_URL=http://<your-host>/api/v1
+WS_BASE_URL=ws://<your-host>/ws
+```
+
+Notes:
+- On a physical device, use your machine’s LAN IP (not `localhost`).
+
+## Running locally
+
+```bash
+cd frontend
+flutter pub get
+flutter run
+```
+
+## API usage notes (important)
+
+- **Smart requests (recommended for normal renewals / first issue)**:
+  - When request type is `expiry` or `new`, the app calls:
+    - `POST /api/v1/picking/slips/auto-create/`
+  - The backend generates slip items automatically based on:
+    - department PPE requirements
+    - employee PPE status (expired / expiring soon / pending issue)
+
+- **Exception requests (manual selection)**:
+  - For `lost` and `damaged`, the app uses manual item selection and calls:
+    - `POST /api/v1/picking/slips/create/`
+  - Backend policy forces **Manager approval** for lost/damaged requests.
+
+## Recent changes (backend/frontend alignment)
+
+- Added `auto-create` picking slip support and wired the app to use it for `expiry` and `new`.
+- Kept manual item selection only for exception flows (`lost`, `damaged`).
+- Added the new endpoint constant in `lib/core/api/endpoints.dart`.
