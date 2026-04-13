@@ -19,6 +19,7 @@ class _DepartmentPpeStandardsScreenState
   List<Map<String, dynamic>> _departments = [];
   List<Map<String, dynamic>> _ppeItems = [];
   final Map<String, Map<String, dynamic>> _requirementsByPpeItem = {};
+  final Map<String, Map<String, dynamic>> _configsByPpeItem = {};
   final Map<String, _DraftRequirement> _draftByPpeItem = {};
   final Set<String> _dirtyPpeItemIds = {};
   String? _selectedDepartmentId;
@@ -72,18 +73,35 @@ class _DepartmentPpeStandardsScreenState
 
   Future<void> _loadRequirementsForDepartment(String departmentId) async {
     try {
-      final response = await sl<ApiClient>().get(
-        Endpoints.ppeRequirements,
-        queryParams: {'department': departmentId},
-      );
-      final data = response.data as Map<String, dynamic>;
+      final responses = await Future.wait([
+        sl<ApiClient>().get(
+          Endpoints.ppeRequirements,
+          queryParams: {'department': departmentId},
+        ),
+        sl<ApiClient>().get(
+          Endpoints.ppeConfigurations,
+          queryParams: {'scope_type': 'department'},
+        ),
+      ]);
+      final reqData = responses[0].data as Map<String, dynamic>;
+      final cfgData = responses[1].data as Map<String, dynamic>;
       final requirements =
-          (data['results'] as List).cast<Map<String, dynamic>>();
+          (reqData['results'] as List).cast<Map<String, dynamic>>();
+      final allDepartmentConfigs =
+          (cfgData['results'] as List).cast<Map<String, dynamic>>();
+      final departmentConfigs = allDepartmentConfigs
+          .where((c) => (c['scope_id'] as String?) == departmentId)
+          .toList();
 
       _requirementsByPpeItem
         ..clear()
         ..addEntries(
           requirements.map((r) => MapEntry(r['ppe_item'] as String, r)),
+        );
+      _configsByPpeItem
+        ..clear()
+        ..addEntries(
+          departmentConfigs.map((c) => MapEntry(c['ppe_item'] as String, c)),
         );
       _resetDraftFromCurrentRequirements();
       if (mounted) setState(() {});
@@ -104,9 +122,15 @@ class _DepartmentPpeStandardsScreenState
     for (final item in _ppeItems) {
       final ppeItemId = item['id'] as String;
       final existing = _requirementsByPpeItem[ppeItemId];
+      final existingConfig = _configsByPpeItem[ppeItemId];
+      final ppeItem = item;
+      final defaultValidity = (ppeItem['default_validity_days'] as int?) ?? 365;
       _draftByPpeItem[ppeItemId] = _DraftRequirement(
         isRequired: (existing?['is_required'] as bool?) ?? false,
         quantity: ((existing?['quantity'] as int?) ?? 1).clamp(1, 999),
+        validityDays:
+            ((existingConfig?['validity_days'] as int?) ?? defaultValidity)
+                .clamp(1, 3650),
       );
     }
   }
@@ -119,6 +143,7 @@ class _DepartmentPpeStandardsScreenState
       final sortedDirtyIds = _dirtyPpeItemIds.toList()..sort();
       for (final ppeItemId in sortedDirtyIds) {
         final existing = _requirementsByPpeItem[ppeItemId];
+        final existingConfig = _configsByPpeItem[ppeItemId];
         final draft = _draftByPpeItem[ppeItemId];
         if (draft == null) continue;
         final payload = {
@@ -134,6 +159,24 @@ class _DepartmentPpeStandardsScreenState
           );
         } else {
           await sl<ApiClient>().post(Endpoints.ppeRequirements, data: payload);
+        }
+
+        final configPayload = {
+          'ppe_item': ppeItemId,
+          'scope_type': 'department',
+          'scope_id': departmentId,
+          'validity_days': draft.validityDays < 1 ? 1 : draft.validityDays,
+        };
+        if (existingConfig != null) {
+          await sl<ApiClient>().patch(
+            Endpoints.ppeConfigurationDetail(existingConfig['id'] as String),
+            data: configPayload,
+          );
+        } else {
+          await sl<ApiClient>().post(
+            Endpoints.ppeConfigurations,
+            data: configPayload,
+          );
         }
       }
 
@@ -157,18 +200,30 @@ class _DepartmentPpeStandardsScreenState
     }
   }
 
-  void _updateDraft(String ppeItemId, bool isRequired, int quantity) {
+  void _updateDraft(
+    String ppeItemId,
+    bool isRequired,
+    int quantity,
+    int validityDays,
+  ) {
     final next = _DraftRequirement(
       isRequired: isRequired,
       quantity: quantity < 1 ? 1 : quantity,
+      validityDays: validityDays < 1 ? 1 : validityDays,
     );
     _draftByPpeItem[ppeItemId] = next;
 
     final existing = _requirementsByPpeItem[ppeItemId];
+    final existingConfig = _configsByPpeItem[ppeItemId];
+    final ppeItem = _ppeItems.firstWhere((item) => item['id'] == ppeItemId);
+    final defaultValidity = (ppeItem['default_validity_days'] as int?) ?? 365;
     final originalRequired = (existing?['is_required'] as bool?) ?? false;
     final originalQuantity = (existing?['quantity'] as int?) ?? 1;
+    final originalValidity =
+        (existingConfig?['validity_days'] as int?) ?? defaultValidity;
     final isDirty = next.isRequired != originalRequired ||
-        next.quantity != originalQuantity;
+        next.quantity != originalQuantity ||
+        next.validityDays != originalValidity;
     if (isDirty) {
       _dirtyPpeItemIds.add(ppeItemId);
     } else {
@@ -214,14 +269,29 @@ class _DepartmentPpeStandardsScreenState
       final sourceMap = <String, Map<String, dynamic>>{
         for (final r in requirements) r['ppe_item'] as String: r,
       };
+      final cfgResponse = await sl<ApiClient>().get(
+        Endpoints.ppeConfigurations,
+        queryParams: {'scope_type': 'department'},
+      );
+      final cfgData = cfgResponse.data as Map<String, dynamic>;
+      final sourceConfigs = (cfgData['results'] as List)
+          .cast<Map<String, dynamic>>()
+          .where((c) => (c['scope_id'] as String?) == sourceDepartmentId)
+          .toList();
+      final sourceConfigMap = <String, Map<String, dynamic>>{
+        for (final c in sourceConfigs) c['ppe_item'] as String: c,
+      };
 
       for (final item in _ppeItems) {
         final ppeItemId = item['id'] as String;
         final sourceReq = sourceMap[ppeItemId];
+        final sourceCfg = sourceConfigMap[ppeItemId];
+        final defaultValidity = (item['default_validity_days'] as int?) ?? 365;
         _updateDraft(
           ppeItemId,
           (sourceReq?['is_required'] as bool?) ?? false,
           (sourceReq?['quantity'] as int?) ?? 1,
+          (sourceCfg?['validity_days'] as int?) ?? defaultValidity,
         );
       }
 
@@ -329,18 +399,22 @@ class _DepartmentPpeStandardsScreenState
                               const _DraftRequirement(
                                 isRequired: false,
                                 quantity: 1,
+                                validityDays: 365,
                               );
                           return _RequirementCard(
                             title: item['name'] as String? ?? 'PPE Item',
                             category: item['category'] as String? ?? '',
                             isRequired: draft.isRequired,
                             quantity: draft.quantity,
+                            validityDays: draft.validityDays,
                             isDirty: _dirtyPpeItemIds.contains(ppeItemId),
-                            onChanged: (requiredValue, quantityValue) =>
-                                _updateDraft(
+                            onChanged:
+                                (requiredValue, quantityValue, validityValue) =>
+                                    _updateDraft(
                               ppeItemId,
                               requiredValue,
                               quantityValue,
+                              validityValue,
                             ),
                           );
                         },
@@ -357,14 +431,17 @@ class _RequirementCard extends StatefulWidget {
   final String category;
   final bool isRequired;
   final int quantity;
+  final int validityDays;
   final bool isDirty;
-  final void Function(bool isRequired, int quantity) onChanged;
+  final void Function(bool isRequired, int quantity, int validityDays)
+      onChanged;
 
   const _RequirementCard({
     required this.title,
     required this.category,
     required this.isRequired,
     required this.quantity,
+    required this.validityDays,
     required this.isDirty,
     required this.onChanged,
   });
@@ -376,21 +453,25 @@ class _RequirementCard extends StatefulWidget {
 class _RequirementCardState extends State<_RequirementCard> {
   late bool _isRequired;
   late int _quantity;
+  late int _validityDays;
 
   @override
   void initState() {
     super.initState();
     _isRequired = widget.isRequired;
     _quantity = widget.quantity < 1 ? 1 : widget.quantity;
+    _validityDays = widget.validityDays < 1 ? 1 : widget.validityDays;
   }
 
   @override
   void didUpdateWidget(covariant _RequirementCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isRequired != widget.isRequired ||
-        oldWidget.quantity != widget.quantity) {
+        oldWidget.quantity != widget.quantity ||
+        oldWidget.validityDays != widget.validityDays) {
       _isRequired = widget.isRequired;
       _quantity = widget.quantity < 1 ? 1 : widget.quantity;
+      _validityDays = widget.validityDays < 1 ? 1 : widget.validityDays;
     }
   }
 
@@ -417,7 +498,7 @@ class _RequirementCardState extends State<_RequirementCard> {
                   value: _isRequired,
                   onChanged: (v) {
                     setState(() => _isRequired = v);
-                    widget.onChanged(_isRequired, _quantity);
+                    widget.onChanged(_isRequired, _quantity, _validityDays);
                   },
                 ),
                 const Spacer(),
@@ -425,7 +506,8 @@ class _RequirementCardState extends State<_RequirementCard> {
                   onPressed: _quantity > 1
                       ? () {
                           setState(() => _quantity--);
-                          widget.onChanged(_isRequired, _quantity);
+                          widget.onChanged(
+                              _isRequired, _quantity, _validityDays);
                         }
                       : null,
                   icon: const Icon(Icons.remove_circle_outline),
@@ -434,7 +516,32 @@ class _RequirementCardState extends State<_RequirementCard> {
                 IconButton(
                   onPressed: () {
                     setState(() => _quantity++);
-                    widget.onChanged(_isRequired, _quantity);
+                    widget.onChanged(_isRequired, _quantity, _validityDays);
+                  },
+                  icon: const Icon(Icons.add_circle_outline),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text('Validity (days)'),
+                const Spacer(),
+                IconButton(
+                  onPressed: _validityDays > 1
+                      ? () {
+                          setState(() => _validityDays--);
+                          widget.onChanged(
+                              _isRequired, _quantity, _validityDays);
+                        }
+                      : null,
+                  icon: const Icon(Icons.remove_circle_outline),
+                ),
+                Text('$_validityDays'),
+                IconButton(
+                  onPressed: () {
+                    setState(() => _validityDays++);
+                    widget.onChanged(_isRequired, _quantity, _validityDays);
                   },
                   icon: const Icon(Icons.add_circle_outline),
                 ),
@@ -616,6 +723,11 @@ class _CopyFromDepartmentDialogState extends State<_CopyFromDepartmentDialog> {
 class _DraftRequirement {
   final bool isRequired;
   final int quantity;
+  final int validityDays;
 
-  const _DraftRequirement({required this.isRequired, required this.quantity});
+  const _DraftRequirement({
+    required this.isRequired,
+    required this.quantity,
+    required this.validityDays,
+  });
 }

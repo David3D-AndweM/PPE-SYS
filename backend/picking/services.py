@@ -185,7 +185,7 @@ def create_auto_slip(employee, request_type, requested_by, notes="", warehouse=N
     )
 
 
-def validate_scan(raw_qr_data, scanned_by):
+def validate_scan(scan_input, scanned_by):
     """
     Decode and verify a QR payload, then return the slip details.
     Logs the scan event regardless of outcome.
@@ -193,26 +193,61 @@ def validate_scan(raw_qr_data, scanned_by):
     """
     from core.utils.qr import verify_slip_qr_payload
 
-    log_entry = ScanLog(scanned_by=scanned_by, raw_data=raw_qr_data[:500])
+    if isinstance(scan_input, str):
+        input_data = {"qr_data": scan_input}
+    else:
+        input_data = dict(scan_input or {})
 
-    try:
-        payload = verify_slip_qr_payload(raw_qr_data)
-    except ValueError as exc:
-        log_entry.status = ScanLog.MISMATCH
-        log_entry.save()
-        raise ValueError(f"Invalid QR code: {exc}") from exc
+    raw_for_log = (
+        input_data.get("qr_data")
+        or input_data.get("slip_number")
+        or input_data.get("mine_number")
+        or str(input_data.get("employee_id", ""))
+    )
+    log_entry = ScanLog(scanned_by=scanned_by, raw_data=str(raw_for_log)[:500])
 
-    slip_id = payload.get("slip_id")
-    try:
-        slip = (
-            PickingSlip.objects.select_related("employee__user", "employee__department__site")
-            .prefetch_related("items__ppe_item", "approvals")
-            .get(pk=slip_id)
+    if input_data.get("qr_data"):
+        try:
+            payload = verify_slip_qr_payload(input_data["qr_data"])
+        except ValueError as exc:
+            log_entry.status = ScanLog.MISMATCH
+            log_entry.save()
+            raise ValueError(f"Invalid QR code: {exc}") from exc
+
+        slip_id = payload.get("slip_id")
+        try:
+            slip = (
+                PickingSlip.objects.select_related("employee__user", "employee__department__site")
+                .prefetch_related("items__ppe_item", "approvals")
+                .get(pk=slip_id)
+            )
+        except PickingSlip.DoesNotExist:
+            log_entry.status = ScanLog.MISMATCH
+            log_entry.save()
+            raise ValueError(f"Picking slip {slip_id} not found.")
+    else:
+        slip_number = (input_data.get("slip_number") or "").upper()
+        mine_number = (input_data.get("mine_number") or "").strip()
+        employee_id = input_data.get("employee_id")
+
+        qs = PickingSlip.objects.select_related("employee__user", "employee__department__site").prefetch_related(
+            "items__ppe_item", "approvals"
         )
-    except PickingSlip.DoesNotExist:
-        log_entry.status = ScanLog.MISMATCH
-        log_entry.save()
-        raise ValueError(f"Picking slip {slip_id} not found.")
+
+        if mine_number:
+            qs = qs.filter(employee__mine_number__iexact=mine_number)
+        elif employee_id:
+            qs = qs.filter(employee_id=employee_id)
+
+        slip = None
+        for candidate in qs[:200]:
+            if str(candidate.id).upper().startswith(slip_number):
+                slip = candidate
+                break
+        if slip is None:
+            log_entry.status = ScanLog.MISMATCH
+            log_entry.save()
+            raise ValueError("No picking slip found for the provided reference.")
 
     log_entry.picking_slip = slip
 

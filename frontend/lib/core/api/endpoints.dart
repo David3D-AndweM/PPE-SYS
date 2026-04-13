@@ -15,6 +15,9 @@ class Endpoints {
 
   // PPE catalogue
   static String get ppeItems => '$base/ppe/items/';
+  static String get ppeConfigurations => '$base/ppe/configurations/';
+  static String ppeConfigurationDetail(String id) =>
+      '$base/ppe/configurations/$id/';
   static String get ppeRequirements => '$base/ppe/requirements/';
   static String ppeRequirementDetail(String id) =>
       '$base/ppe/requirements/$id/';
