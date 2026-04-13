@@ -54,6 +54,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
       }
       _load();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );

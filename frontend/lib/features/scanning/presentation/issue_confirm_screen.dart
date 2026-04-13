@@ -120,7 +120,7 @@ class _IssueConfirmScreenState extends State<IssueConfirmScreen> {
                   _warehouses.isEmpty
                       ? const Text('No warehouses available.', style: TextStyle(color: Colors.red))
                       : DropdownButtonFormField<String>(
-                          value: _selectedWarehouseId,
+                          initialValue: _selectedWarehouseId,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),

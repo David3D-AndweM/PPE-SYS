@@ -67,7 +67,7 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
               Text('Receive Stock', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedPpeItemId,
+                initialValue: selectedPpeItemId,
                 decoration: const InputDecoration(labelText: 'PPE Item'),
                 items: _ppeItems
                     .map((item) => DropdownMenuItem<String>(
@@ -79,7 +79,7 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: selectedWarehouseId,
+                initialValue: selectedWarehouseId,
                 decoration: const InputDecoration(labelText: 'Warehouse'),
                 items: _warehouses
                     .map((w) => DropdownMenuItem<String>(
@@ -112,22 +112,20 @@ class _AdminInventoryScreenState extends State<AdminInventoryScreen> {
                           'quantity': qty,
                         },
                       );
-                      if (mounted) {
-                        Navigator.of(sheetCtx).pop();
-                        _load();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Stock received successfully.'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      Navigator.of(sheetCtx).pop();
+                      _load();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Stock received successfully.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
                     } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
-                        );
-                      }
+                      if (!mounted || !sheetCtx.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                      );
                     }
                   },
                   child: const Text('Receive'),
