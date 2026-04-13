@@ -160,3 +160,86 @@ class TestPickingSlipLifecycle:
             format="json",
         )
         assert resp.status_code == 401
+
+    def test_auto_create_expiry_only_includes_expired_or_expiring(self, employee_client, employee, department):
+        from ppe.models import DepartmentPPERequirement, EmployeePPE, PPEItem
+
+        valid_item = PPEItem.objects.create(
+            name="Valid Item X",
+            category="head",
+            default_validity_days=365,
+            is_active=True,
+        )
+        expired_item = PPEItem.objects.create(
+            name="Expired Item Y",
+            category="head",
+            default_validity_days=365,
+            is_active=True,
+        )
+
+        DepartmentPPERequirement.objects.create(department=department, ppe_item=valid_item, is_required=True, quantity=1)
+        DepartmentPPERequirement.objects.create(department=department, ppe_item=expired_item, is_required=True, quantity=2)
+
+        EmployeePPE.objects.create(employee=employee, ppe_item=valid_item, status=EmployeePPEStatus.VALID)
+        EmployeePPE.objects.create(employee=employee, ppe_item=expired_item, status=EmployeePPEStatus.EXPIRED)
+
+        resp = employee_client.post(
+            "/api/v1/picking/slips/auto-create/",
+            {"employee_id": str(employee.id), "request_type": "expiry"},
+            format="json",
+        )
+        assert resp.status_code == 201
+        items = resp.data["items"]
+        assert len(items) == 1
+        assert str(items[0]["ppe_item"]) == str(expired_item.id)
+        assert items[0]["quantity"] == 2
+
+    def test_auto_create_new_includes_missing_and_pending(self, employee_client, employee, department):
+        from ppe.models import DepartmentPPERequirement, EmployeePPE, PPEItem
+
+        item_a = PPEItem.objects.create(name="New Item A", category="head", default_validity_days=365, is_active=True)
+        item_b = PPEItem.objects.create(name="New Item B", category="head", default_validity_days=365, is_active=True)
+        DepartmentPPERequirement.objects.create(department=department, ppe_item=item_a, is_required=True, quantity=1)
+        DepartmentPPERequirement.objects.create(department=department, ppe_item=item_b, is_required=True, quantity=1)
+
+        # item_a pending, item_b missing => both should be included for "new"
+        EmployeePPE.objects.create(employee=employee, ppe_item=item_a, status=EmployeePPEStatus.PENDING_ISSUE)
+
+        resp = employee_client.post(
+            "/api/v1/picking/slips/auto-create/",
+            {"employee_id": str(employee.id), "request_type": "new"},
+            format="json",
+        )
+        assert resp.status_code == 201
+        returned_ids = sorted([str(it["ppe_item"]) for it in resp.data["items"]])
+        assert returned_ids == sorted([str(item_a.id), str(item_b.id)])
+
+    def test_lost_request_forces_manager_approval(self, employee_client, employee, department, safety_user):
+        from ppe.models import PPEConfiguration, PPEItem
+
+        ppe_item = PPEItem.objects.create(
+            name="Config Item Z",
+            category="head",
+            default_validity_days=365,
+            is_active=True,
+        )
+        PPEConfiguration.objects.create(
+            ppe_item=ppe_item,
+            scope_type="department",
+            scope_id=department.id,
+            validity_days=365,
+            grace_days=7,
+            requires_approval=True,
+            approval_levels=[{"role": "safety", "required": True}],
+        )
+
+        resp = employee_client.post(
+            "/api/v1/picking/slips/create/",
+            {"employee_id": str(employee.id), "request_type": "lost", "items": [{"ppe_item_id": str(ppe_item.id)}]},
+            format="json",
+        )
+        assert resp.status_code == 201
+        slip_id = resp.data["id"]
+        slip = PickingSlip.objects.get(pk=slip_id)
+        roles = list(slip.approvals.values_list("required_role", flat=True))
+        assert "manager" in roles

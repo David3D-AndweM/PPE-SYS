@@ -9,9 +9,24 @@ from datetime import date
 
 from django.db import transaction
 
-from .models import PickingSlip, PickingSlipItem, ScanLog, SlipStatus
+from .models import PickingSlip, PickingSlipItem, RequestType, ScanLog, SlipStatus
 
 logger = logging.getLogger(__name__)
+
+
+def _ensure_manager_required(approval_levels):
+    """
+    Ensure a manager approval step exists and is required.
+    approval_levels shape: [{"role": "manager", "required": true}, ...]
+    """
+    levels = list(approval_levels or [])
+    if not any((lvl.get("role") == "manager") for lvl in levels):
+        return [{"role": "manager", "required": True}] + levels
+    # Force required=True if present
+    for lvl in levels:
+        if lvl.get("role") == "manager":
+            lvl["required"] = True
+    return levels
 
 
 @transaction.atomic
@@ -57,6 +72,10 @@ def create_slip(employee, ppe_items_with_qty, request_type, requested_by, notes=
     # (take the config with the most approval steps as the governing config)
     approval_levels = _determine_approval_levels(ppe_items_with_qty, employee.department)
 
+    # Lost/damaged requests must always be explicitly approved by the manager.
+    if request_type in (RequestType.LOST, RequestType.DAMAGED):
+        approval_levels = _ensure_manager_required(approval_levels)
+
     if approval_levels:
         create_approvals_for_slip(slip, approval_levels)
     else:
@@ -88,6 +107,83 @@ def create_slip(employee, ppe_items_with_qty, request_type, requested_by, notes=
         len(ppe_items_with_qty),
     )
     return slip
+
+
+def build_auto_items_for_employee(employee, request_type):
+    """
+    Build the list of slip items automatically from:
+    - DepartmentPPERequirement (required items for the employee's department)
+    - EmployeePPE status (what is expired/expiring/pending)
+
+    request_type:
+      - new: include missing or pending_issue requirements
+      - expiry: include expired or expiring_soon requirements
+    """
+    from ppe.models import DepartmentPPERequirement, EmployeePPE, EmployeePPEStatus
+
+    requirements = (
+        DepartmentPPERequirement.objects.filter(department=employee.department, is_required=True)
+        .select_related("ppe_item")
+        .all()
+    )
+    if not requirements:
+        return []
+
+    by_item_id = {
+        str(ep.ppe_item_id): ep
+        for ep in EmployeePPE.objects.filter(employee=employee).select_related("ppe_item").all()
+    }
+
+    items = []
+    for req in requirements:
+        ep = by_item_id.get(str(req.ppe_item_id))
+
+        if request_type == RequestType.NEW:
+            include = (ep is None) or (ep.status == EmployeePPEStatus.PENDING_ISSUE)
+        else:
+            include = (ep is None) or (ep.status in (EmployeePPEStatus.EXPIRED, EmployeePPEStatus.EXPIRING_SOON))
+
+        if include:
+            items.append({"ppe_item": req.ppe_item, "quantity": req.quantity})
+
+    return items
+
+
+@transaction.atomic
+def create_auto_slip(employee, request_type, requested_by, notes="", warehouse=None):
+    """
+    Create a picking slip with system-generated items so employees don't have to
+    select PPE manually for standard renewal/first-issue requests.
+    """
+    # request_type may be passed as string from serializer; normalize.
+    if request_type in (RequestType.NEW, RequestType.EXPIRY, RequestType.LOST, RequestType.DAMAGED):
+        normalized = request_type
+    else:
+        normalized = str(request_type)
+
+    if normalized not in (RequestType.NEW, RequestType.EXPIRY):
+        raise ValueError("Auto-create only supports request_type 'new' or 'expiry'.")
+
+    # Prevent duplicate pending/approved auto-renewals cluttering the workflow.
+    if PickingSlip.objects.filter(
+        employee=employee,
+        request_type=normalized,
+        status__in=(SlipStatus.PENDING, SlipStatus.APPROVED),
+    ).exists():
+        raise ValueError("A request of this type is already pending/approved for this employee.")
+
+    items = build_auto_items_for_employee(employee, request_type=normalized)
+    if not items:
+        raise ValueError("No PPE items require action for this employee.")
+
+    return create_slip(
+        employee=employee,
+        ppe_items_with_qty=items,
+        request_type=normalized,
+        requested_by=requested_by,
+        notes=notes,
+        warehouse=warehouse,
+    )
 
 
 def validate_scan(raw_qr_data, scanned_by):

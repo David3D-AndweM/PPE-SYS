@@ -31,6 +31,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: dev.txt
     command: >
       sh -c "python manage.py migrate &&
              daphne -b 0.0.0.0 -p 8000 config.asgi:application"
@@ -61,6 +63,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: dev.txt
     command: celery -A celery_tasks.app worker -l info -c 4 -Q default,expiry,alerts,stock
     volumes:
       - ./backend:/app
@@ -80,6 +84,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: dev.txt
     command: celery -A celery_tasks.app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./backend:/app

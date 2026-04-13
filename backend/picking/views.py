@@ -8,12 +8,13 @@ from core.permissions import IsAdminOrManager, IsStoreOfficer
 
 from .models import PickingSlip
 from .serializers import (
+    AutoCreatePickingSlipSerializer,
     CreatePickingSlipSerializer,
     FinalizeIssueSerializer,
     PickingSlipSerializer,
     ScanValidateSerializer,
 )
-from .services import create_slip, finalize_issue, validate_scan
+from .services import create_auto_slip, create_slip, finalize_issue, validate_scan
 
 
 class PickingSlipListView(ListAPIView):
@@ -81,6 +82,49 @@ class CreatePickingSlipView(APIView):
             slip = create_slip(
                 employee=employee,
                 ppe_items_with_qty=d["items"],
+                request_type=d["request_type"],
+                requested_by=request.user,
+                notes=d.get("notes", ""),
+                warehouse=warehouse,
+            )
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(PickingSlipSerializer(slip).data, status=status.HTTP_201_CREATED)
+
+
+class AutoCreatePickingSlipView(APIView):
+    """
+    Create a "smart" slip where items are generated automatically from:
+    - Department PPE requirements
+    - Employee PPE status (expired/expiring/pending)
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AutoCreatePickingSlipSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        d = serializer.validated_data
+
+        from inventory.models import Warehouse
+        from organization.models import Employee
+
+        try:
+            employee = Employee.objects.get(pk=d["employee_id"])
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        warehouse = None
+        if d.get("warehouse_id"):
+            try:
+                warehouse = Warehouse.objects.get(pk=d["warehouse_id"])
+            except Warehouse.DoesNotExist:
+                return Response({"error": "Warehouse not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            slip = create_auto_slip(
+                employee=employee,
                 request_type=d["request_type"],
                 requested_by=request.user,
                 notes=d.get("notes", ""),

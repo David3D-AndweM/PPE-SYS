@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy and install requirements
 COPY requirements/ /build/requirements/
-RUN pip install --user --no-warn-script-location -r /build/requirements/prod.txt
+ARG REQUIREMENTS_FILE=prod.txt
+RUN pip install --user --no-warn-script-location -r /build/requirements/${REQUIREMENTS_FILE}
 
 # Runtime stage
 FROM python:3.12-slim

@@ -83,6 +83,13 @@ class CreatePickingSlipSerializer(serializers.Serializer):
         return cleaned
 
 
+class AutoCreatePickingSlipSerializer(serializers.Serializer):
+    employee_id = serializers.UUIDField()
+    request_type = serializers.ChoiceField(choices=["expiry", "new"])
+    notes = serializers.CharField(required=False, allow_blank=True)
+    warehouse_id = serializers.UUIDField(required=False, allow_null=True)
+
+
 class ScanValidateSerializer(serializers.Serializer):
     qr_data = serializers.CharField()
 

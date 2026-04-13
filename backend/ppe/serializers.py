@@ -8,6 +8,32 @@ from .models import (
 )
 
 
+def _user_can_manage_department(user, department) -> bool:
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    roles = set(user.get_roles())
+    if "Admin" in roles:
+        return True
+    if "Manager" in roles and getattr(department, "manager_id", None) == user.id:
+        return True
+    if "Safety" in roles and getattr(department, "safety_officer_id", None) == user.id:
+        return True
+
+    # Fallback: allow if role is explicitly scoped to this department or its site.
+    # (UserRole supports site/department scoping.)
+    try:
+        if user.user_roles.filter(role__name__in=["Manager", "Safety"], department=department).exists():
+            return True
+        if user.user_roles.filter(role__name__in=["Manager", "Safety"], site=department.site).exists():
+            return True
+    except Exception:
+        return False
+
+    return False
+
+
 class PPEItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPEItem
@@ -43,6 +69,35 @@ class PPEConfigurationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at"]
 
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return attrs
+
+        if user.is_superuser or "Admin" in set(user.get_roles()):
+            return attrs
+
+        # Non-admins may only manage department-scoped configurations for departments they manage/own.
+        scope_type = attrs.get("scope_type", getattr(self.instance, "scope_type", None))
+        scope_id = attrs.get("scope_id", getattr(self.instance, "scope_id", None))
+        if scope_type != "department" or not scope_id:
+            raise serializers.ValidationError(
+                "Only Admin can create/update system or site scoped PPE configurations."
+            )
+
+        from organization.models import Department
+
+        try:
+            dept = Department.objects.select_related("site").get(pk=scope_id)
+        except Department.DoesNotExist as exc:
+            raise serializers.ValidationError("Invalid department scope_id.") from exc
+
+        if not _user_can_manage_department(user, dept):
+            raise serializers.ValidationError("You are not allowed to manage PPE configuration for this department.")
+
+        return attrs
+
 
 class DepartmentPPERequirementSerializer(serializers.ModelSerializer):
     ppe_item_name = serializers.CharField(source="ppe_item.name", read_only=True)
@@ -60,6 +115,17 @@ class DepartmentPPERequirementSerializer(serializers.ModelSerializer):
             "quantity",
         ]
         read_only_fields = ["id"]
+
+    def validate_department(self, department):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return department
+        if user.is_superuser or "Admin" in set(user.get_roles()):
+            return department
+        if not _user_can_manage_department(user, department):
+            raise serializers.ValidationError("You are not allowed to manage PPE requirements for this department.")
+        return department
 
 
 class EmployeePPESerializer(serializers.ModelSerializer):
