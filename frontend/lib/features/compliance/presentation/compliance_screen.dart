@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/endpoints.dart';
 import '../../../core/widgets/ppe_status_badge.dart';
 import '../../../injection.dart';
+import '../../approvals/data/approvals_repository.dart';
 import '../../my_ppe/data/ppe_repository.dart';
 
 class ComplianceScreen extends StatefulWidget {
@@ -13,8 +15,8 @@ class ComplianceScreen extends StatefulWidget {
 }
 
 class _ComplianceScreenState extends State<ComplianceScreen> {
-  // Each entry: employee map + 'assignments' key → List<Map>
   List<Map<String, dynamic>> _employees = [];
+  List<Map<String, dynamic>> _pendingClaims = [];
   bool _loading = true;
 
   @override
@@ -30,6 +32,11 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       final data = response.data as Map<String, dynamic>;
       final employees =
           (data['results'] as List).cast<Map<String, dynamic>>();
+      final approvals = await sl<ApprovalsRepository>().getPendingApprovals();
+      final pendingClaims = approvals.where((approval) {
+        final type = (approval['slip_request_type'] ?? '').toString();
+        return type == 'lost' || type == 'damaged';
+      }).toList();
 
       // Load each employee's PPE assignments in parallel
       final assignmentLists = await Future.wait(
@@ -59,6 +66,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
       setState(() {
         _employees = enriched;
+        _pendingClaims = pendingClaims;
         _loading = false;
       });
     } catch (e) {
@@ -79,98 +87,279 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
     return Colors.green;
   }
 
+  int get _expiredEmployees => _employees
+      .where((emp) => _complianceScore((emp['assignments'] as List)) == 0)
+      .length;
+
+  int get _expiringSoonEmployees => _employees
+      .where((emp) => _complianceScore((emp['assignments'] as List)) == 1)
+      .length;
+
+  String _dateOnly(dynamic raw) {
+    final text = (raw ?? '').toString();
+    return text.length >= 10 ? text.substring(0, 10) : text;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final departmentNames = _employees
+        .map((e) => (e['department_name'] ?? '').toString())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Team Compliance')),
+      appBar: AppBar(
+        title: const Text('Manager Home'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(24),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Team Operations and Claims',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
-              child: _employees.isEmpty
-                  ? const Center(child: Text('No employees found.'))
-                  : ListView.builder(
-                      itemCount: _employees.length,
-                      itemBuilder: (_, i) {
-                        final emp = _employees[i];
-                        final assignments =
-                            (emp['assignments'] as List).cast<Map<String, dynamic>>();
-                        final dotColor = _statusDotColor(assignments);
-
-                        return ExpansionTile(
-                          leading: Stack(
-                            children: [
-                              const CircleAvatar(child: Icon(Icons.person)),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: dotColor,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 1.5),
-                                  ),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Your Department(s)',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            departmentNames.isEmpty
+                                ? 'No managed department found.'
+                                : departmentNames.join(', '),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MetricCard(
+                          title: 'Team Size',
+                          value: _employees.length.toString(),
+                          icon: Icons.people,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MetricCard(
+                          title: 'Expired PPE',
+                          value: _expiredEmployees.toString(),
+                          icon: Icons.warning_amber_rounded,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MetricCard(
+                          title: 'Expiring Soon',
+                          value: _expiringSoonEmployees.toString(),
+                          icon: Icons.schedule,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Team PPE Status',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_employees.isEmpty)
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(14),
+                        child: Text('No employees found under your department.'),
+                      ),
+                    )
+                  else
+                    ..._employees.map((emp) {
+                      final assignments =
+                          (emp['assignments'] as List).cast<Map<String, dynamic>>();
+                      final dotColor = _statusDotColor(assignments);
+                      return ExpansionTile(
+                        leading: Stack(
+                          children: [
+                            const CircleAvatar(child: Icon(Icons.person)),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: dotColor,
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: Colors.white, width: 1.5),
                                 ),
                               ),
-                            ],
-                          ),
-                          title: Text(
-                            emp['full_name'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          subtitle: Text(
-                            '${emp['mine_number'] ?? ''} · ${emp['department_name'] ?? ''}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          children: assignments.isEmpty
-                              ? [
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 12),
-                                    child: Text(
-                                      'No PPE assigned.',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
+                            ),
+                          ],
+                        ),
+                        title: Text(
+                          emp['full_name'] ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          '${emp['mine_number'] ?? ''} · ${emp['department_name'] ?? ''}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        children: assignments.isEmpty
+                            ? [
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                  child: Text(
+                                    'No PPE assigned.',
+                                    style: TextStyle(color: Colors.grey),
                                   ),
-                                ]
-                              : assignments.map((a) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 6),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
+                                ),
+                              ]
+                            : assignments.map((a) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 6),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              a['ppe_item_name'] ?? '',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                            if (a['expiry_date'] != null)
                                               Text(
-                                                a['ppe_item_name'] ?? '',
+                                                'Expires: ${a['expiry_date']}',
                                                 style: const TextStyle(
-                                                    fontWeight: FontWeight.w500),
+                                                    fontSize: 11,
+                                                    color: Colors.grey),
                                               ),
-                                              if (a['expiry_date'] != null)
-                                                Text(
-                                                  'Expires: ${a['expiry_date']}',
-                                                  style: const TextStyle(
-                                                      fontSize: 11,
-                                                      color: Colors.grey),
-                                                ),
-                                            ],
-                                          ),
+                                          ],
                                         ),
-                                        PpeStatusBadge(
-                                            status: a['status'] ?? ''),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                        );
-                      },
-                    ),
+                                      ),
+                                      PpeStatusBadge(status: a['status'] ?? ''),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                      );
+                    }),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Lost/Damaged Submissions',
+                        style:
+                            TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => context.go('/approvals'),
+                        icon: const Icon(Icons.fact_check),
+                        label: const Text('Open Approvals'),
+                      ),
+                    ],
+                  ),
+                  if (_pendingClaims.isEmpty)
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(14),
+                        child: Text('No pending lost/damaged submissions.'),
+                      ),
+                    )
+                  else
+                    ..._pendingClaims.map((claim) {
+                      final type = (claim['slip_request_type'] ?? '').toString();
+                      return Card(
+                        child: ListTile(
+                          isThreeLine: true,
+                          leading: Icon(
+                            type == 'lost'
+                                ? Icons.report_problem_outlined
+                                : Icons.build_circle_outlined,
+                          ),
+                          title: Text(claim['slip_employee_name'] ?? 'Employee'),
+                          subtitle: Text(
+                            '${claim['slip_department_name'] ?? ''} · ${claim['slip_mine_number'] ?? ''}\n'
+                            'Submitted: ${_dateOnly(claim['created_at'])} · Items: ${claim['slip_item_count'] ?? 0}',
+                          ),
+                          trailing: IconButton(
+                            tooltip: 'Open this approval',
+                            onPressed: () => context.go('/approvals?focus=${claim['id']}'),
+                            icon: const Icon(Icons.arrow_forward_ios_rounded),
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
             ),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 2),
+            Text(title, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
     );
   }
 }

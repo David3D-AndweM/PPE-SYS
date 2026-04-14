@@ -68,7 +68,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "first_name", "last_name", "password", "confirm_password"]
+        fields = ["id", "email", "first_name", "last_name", "password", "confirm_password"]
+        read_only_fields = ["id"]
 
     def validate(self, attrs):
         if attrs["password"] != attrs.pop("confirm_password"):

@@ -134,6 +134,8 @@ class EmployeePPESerializer(serializers.ModelSerializer):
     is_critical = serializers.BooleanField(source="ppe_item.is_critical", read_only=True)
     employee_name = serializers.CharField(source="employee.user.get_full_name", read_only=True)
     mine_number = serializers.CharField(source="employee.mine_number", read_only=True)
+    department_name = serializers.CharField(source="employee.department.name", read_only=True)
+    site_name = serializers.CharField(source="employee.department.site.name", read_only=True)
 
     class Meta:
         model = EmployeePPE
@@ -142,6 +144,8 @@ class EmployeePPESerializer(serializers.ModelSerializer):
             "employee",
             "employee_name",
             "mine_number",
+            "department_name",
+            "site_name",
             "ppe_item",
             "ppe_item_name",
             "ppe_item_category",

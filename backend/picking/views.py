@@ -23,6 +23,7 @@ class PickingSlipListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        roles = user.get_roles() if hasattr(user, "get_roles") else []
         qs = PickingSlip.objects.select_related(
             "employee__user",
             "employee__department__site",
@@ -30,11 +31,14 @@ class PickingSlipListView(ListAPIView):
             "requested_by",
         ).prefetch_related("items__ppe_item", "approvals")
 
-        # Employees can only see their own slips
+        # Employees can only see their own slips.
         if hasattr(user, "employee"):
-            roles = user.get_roles()
             if "Employee" in roles and not any(r in roles for r in ["Manager", "Admin", "Store"]):
                 return qs.filter(employee=user.employee)
+
+        # Managers are limited to submissions from departments they manage.
+        if "Manager" in roles and not any(r in roles for r in ["Admin", "Safety"]) and not user.is_superuser:
+            qs = qs.filter(department__manager=user)
 
         slip_status = self.request.query_params.get("status")
         employee_id = self.request.query_params.get("employee")
@@ -123,7 +127,7 @@ class AutoCreatePickingSlipView(APIView):
                 return Response({"error": "Warehouse not found."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            slip = create_auto_slip(
+            slip, reused_existing = create_auto_slip(
                 employee=employee,
                 request_type=d["request_type"],
                 requested_by=request.user,
@@ -133,7 +137,8 @@ class AutoCreatePickingSlipView(APIView):
         except Exception as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(PickingSlipSerializer(slip).data, status=status.HTTP_201_CREATED)
+        response_status = status.HTTP_200_OK if reused_existing else status.HTTP_201_CREATED
+        return Response(PickingSlipSerializer(slip).data, status=response_status)
 
 
 class ValidateScanView(APIView):

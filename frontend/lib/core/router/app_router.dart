@@ -46,7 +46,9 @@ class AppRouter {
               builder: (_, __) => const SlipListScreen()),
           GoRoute(
               path: '/my-ppe/slips/create',
-              builder: (_, __) => const CreateSlipScreen()),
+              builder: (_, state) => CreateSlipScreen(
+                    initialRequestType: state.uri.queryParameters['type'],
+                  )),
           GoRoute(
             path: '/my-ppe/slips/:id',
             builder: (_, state) =>
@@ -63,7 +65,10 @@ class AppRouter {
 
           // Manager / Safety
           GoRoute(
-              path: '/approvals', builder: (_, __) => const ApprovalsScreen()),
+              path: '/approvals',
+              builder: (_, state) => ApprovalsScreen(
+                    initialApprovalId: state.uri.queryParameters['focus'],
+                  )),
           GoRoute(
               path: '/compliance',
               builder: (_, __) => const ComplianceScreen()),
@@ -261,7 +266,7 @@ class _AppShell extends StatelessWidget {
       case 'Manager':
         return [
           const _NavItem(
-              Icons.people_outline, Icons.people, 'Compliance', '/compliance'),
+              Icons.people_outline, Icons.people, 'Team', '/compliance'),
           const _NavItem(Icons.fact_check_outlined, Icons.fact_check,
               'Approvals', '/approvals'),
           const _NavItem(Icons.notifications_outlined, Icons.notifications,

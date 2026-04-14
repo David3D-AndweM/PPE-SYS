@@ -31,8 +31,12 @@ class PendingApprovalListView(ListAPIView):
             required_role__in=user_approval_roles,
         ).select_related(
             "picking_slip__employee__user",
+            "picking_slip__department__manager",
             "picking_slip__employee__department__site",
         )
+
+        if "Manager" in roles and not user.is_superuser:
+            qs = qs.filter(required_role="manager", picking_slip__department__manager=user)
 
         if site_ids and not user.is_superuser:
             qs = qs.filter(picking_slip__employee__department__site_id__in=site_ids)

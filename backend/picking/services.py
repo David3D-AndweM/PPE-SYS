@@ -163,19 +163,20 @@ def create_auto_slip(employee, request_type, requested_by, notes="", warehouse=N
     if normalized not in (RequestType.NEW, RequestType.EXPIRY):
         raise ValueError("Auto-create only supports request_type 'new' or 'expiry'.")
 
-    # Prevent duplicate pending/approved auto-renewals cluttering the workflow.
-    if PickingSlip.objects.filter(
+    # Idempotent behavior: if a relevant request is already open, return it.
+    existing = PickingSlip.objects.filter(
         employee=employee,
         request_type=normalized,
         status__in=(SlipStatus.PENDING, SlipStatus.APPROVED),
-    ).exists():
-        raise ValueError("A request of this type is already pending/approved for this employee.")
+    ).first()
+    if existing is not None:
+        return existing, True
 
     items = build_auto_items_for_employee(employee, request_type=normalized)
     if not items:
         raise ValueError("No PPE items require action for this employee.")
 
-    return create_slip(
+    created = create_slip(
         employee=employee,
         ppe_items_with_qty=items,
         request_type=normalized,
@@ -183,6 +184,7 @@ def create_auto_slip(employee, request_type, requested_by, notes="", warehouse=N
         notes=notes,
         warehouse=warehouse,
     )
+    return created, False
 
 
 def validate_scan(scan_input, scanned_by):

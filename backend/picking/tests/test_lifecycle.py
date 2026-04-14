@@ -218,6 +218,35 @@ class TestPickingSlipLifecycle:
         returned_ids = sorted([str(it["ppe_item"]) for it in resp.data["items"]])
         assert returned_ids == sorted([str(item_a.id), str(item_b.id)])
 
+    def test_auto_create_returns_existing_pending_request(self, employee_client, employee, department):
+        from ppe.models import DepartmentPPERequirement, EmployeePPE, PPEItem
+
+        due_item = PPEItem.objects.create(
+            name="Due Item Existing",
+            category="head",
+            default_validity_days=365,
+            is_active=True,
+        )
+        DepartmentPPERequirement.objects.create(
+            department=department, ppe_item=due_item, is_required=True, quantity=1
+        )
+        EmployeePPE.objects.create(employee=employee, ppe_item=due_item, status=EmployeePPEStatus.EXPIRED)
+
+        first = employee_client.post(
+            "/api/v1/picking/slips/auto-create/",
+            {"employee_id": str(employee.id), "request_type": "expiry"},
+            format="json",
+        )
+        assert first.status_code == 201
+
+        second = employee_client.post(
+            "/api/v1/picking/slips/auto-create/",
+            {"employee_id": str(employee.id), "request_type": "expiry"},
+            format="json",
+        )
+        assert second.status_code == 200
+        assert second.data["id"] == first.data["id"]
+
     def test_lost_request_forces_manager_approval(self, employee_client, employee, department, safety_user):
         from ppe.models import PPEConfiguration, PPEItem
 
@@ -247,3 +276,42 @@ class TestPickingSlipLifecycle:
         slip = PickingSlip.objects.get(pk=slip_id)
         roles = list(slip.approvals.values_list("required_role", flat=True))
         assert "manager" in roles
+
+    def test_lost_request_rejects_item_outside_department(self, employee_client, employee, department):
+        from ppe.models import PPEItem
+
+        rogue_item = PPEItem.objects.create(
+            name="Outside Dept Item",
+            category="head",
+            default_validity_days=365,
+            is_active=True,
+        )
+        resp = employee_client.post(
+            "/api/v1/picking/slips/create/",
+            {
+                "employee_id": str(employee.id),
+                "request_type": "lost",
+                "items": [{"ppe_item_id": str(rogue_item.id), "quantity": 1}],
+            },
+            format="json",
+        )
+        assert resp.status_code == 400
+
+    def test_manager_list_only_returns_department_submissions(self, manager_client, manager_user, site):
+        from organization.factories import DepartmentFactory, EmployeeFactory
+        from picking.factories import PickingSlipFactory
+
+        managed_department = DepartmentFactory(site=site, manager=manager_user)
+        other_department = DepartmentFactory(site=site)
+        managed_employee = EmployeeFactory(department=managed_department)
+        other_employee = EmployeeFactory(department=other_department)
+
+        managed_slip = PickingSlipFactory(employee=managed_employee, department=managed_department)
+        PickingSlipFactory(employee=other_employee, department=other_department)
+
+        resp = manager_client.get("/api/v1/picking/slips/")
+        assert resp.status_code == 200
+
+        ids = {item["id"] for item in resp.data["results"]}
+        assert str(managed_slip.id) in ids
+        assert len(ids) == 1

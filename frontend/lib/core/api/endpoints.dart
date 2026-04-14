@@ -13,6 +13,7 @@ class Endpoints {
   static String userRoles(String userId) => '$base/auth/users/$userId/roles/';
   static String get roles => '$base/auth/roles/';
   static String get passwordReset => '$base/auth/password-reset/';
+  static String get impersonateUser => '$base/auth/impersonate/';
 
   // My PPE
   static String get myPpe => '$base/ppe/my-ppe/';

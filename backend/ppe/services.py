@@ -164,6 +164,10 @@ def get_employee_compliance_summary(employee):
     total = assignments.count()
 
     counts = {
+        "employee_name": employee.user.get_full_name(),
+        "mine_number": employee.mine_number,
+        "department_name": employee.department.name,
+        "site_name": employee.department.site.name,
         "total": total,
         "valid": assignments.filter(status=EmployeePPEStatus.VALID).count(),
         "expiring_soon": assignments.filter(status=EmployeePPEStatus.EXPIRING_SOON).count(),

@@ -36,7 +36,8 @@ String _statusLabel(String? status) {
 }
 
 class CreateSlipScreen extends StatefulWidget {
-  const CreateSlipScreen({super.key});
+  final String? initialRequestType;
+  const CreateSlipScreen({super.key, this.initialRequestType});
 
   @override
   State<CreateSlipScreen> createState() => _CreateSlipScreenState();
@@ -54,6 +55,7 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
 
   /// Employee's current PPE status: ppe_item_id → assignment map
   Map<String, Map<String, dynamic>> _myStatus = {};
+  Set<String> _allowedDepartmentPpeIds = {};
 
   /// Selected quantities: ppe_item_id → qty
   final Map<String, int> _quantities = {};
@@ -68,6 +70,10 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
   @override
   void initState() {
     super.initState();
+    final t = widget.initialRequestType;
+    if (t != null && const {'expiry', 'lost', 'damaged', 'new'}.contains(t)) {
+      _requestType = t;
+    }
     _load();
   }
 
@@ -91,9 +97,13 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
 
       // Build status lookup: ppe_item_id → assignment data
       final statusMap = <String, Map<String, dynamic>>{};
+      final allowedIds = <String>{};
       for (final a in myPpe) {
         final itemId = a['ppe_item'] as String?;
-        if (itemId != null) statusMap[itemId] = a;
+        if (itemId != null) {
+          statusMap[itemId] = a;
+          allowedIds.add(itemId);
+        }
       }
 
       // Initialise quantities to 0
@@ -105,6 +115,7 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
       setState(() {
         _catalogue  = catalogue;
         _myStatus   = statusMap;
+        _allowedDepartmentPpeIds = allowedIds;
         _quantities.addAll(quantities);
         _loading    = false;
       });
@@ -140,7 +151,12 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
   }
 
   List<Map<String, dynamic>> get _sortedItems {
-    final items = List<Map<String, dynamic>>.from(_catalogue);
+    final source = _isExceptionFlow
+        ? _catalogue
+            .where((item) => _allowedDepartmentPpeIds.contains(item['id'] as String))
+            .toList()
+        : _catalogue;
+    final items = List<Map<String, dynamic>>.from(source);
     items.sort((a, b) {
       final sa = _statusPriority(_myStatus[a['id']]?['status'] as String?);
       final sb = _statusPriority(_myStatus[b['id']]?['status'] as String?);
@@ -348,7 +364,7 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
               Text(
                 (_requestType == 'expiry' || _requestType == 'new')
                     ? 'Items will be generated automatically'
-                    : 'Select Items',
+                    : 'Select Items (Department PPE only)',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               if (_isExceptionFlow && _selectedCount > 0)
@@ -366,6 +382,14 @@ class _CreateSlipScreenState extends State<CreateSlipScreen> {
             ],
           ),
           const SizedBox(height: 8),
+          if (_isExceptionFlow)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'You can only claim items assigned to your department.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ),
 
           Card(
             margin: EdgeInsets.zero,

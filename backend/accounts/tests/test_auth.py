@@ -37,6 +37,19 @@ class TestLogin:
         resp = APIClient().post(self.url, {"email": "nobody@x.com", "password": "any"})
         assert resp.status_code == 401
 
+    def test_superuser_token_includes_admin_role(self, admin_user):
+        import jwt as pyjwt
+
+        admin_user.is_superuser = True
+        admin_user.is_staff = True
+        admin_user.set_password("AdminPass1234!")
+        admin_user.save(update_fields=["is_superuser", "is_staff", "password"])
+
+        resp = APIClient().post(self.url, {"email": admin_user.email, "password": "AdminPass1234!"})
+        assert resp.status_code == 200
+        payload = pyjwt.decode(resp.data["access"], options={"verify_signature": False})
+        assert "Admin" in payload.get("roles", [])
+
     def test_unauthenticated_profile_returns_401(self):
         resp = APIClient().get("/api/v1/auth/me/")
         assert resp.status_code == 401
@@ -100,5 +113,30 @@ class TestPasswordReset:
         resp = APIClient().post(
             "/api/v1/auth/password-reset/confirm/",
             {"uid": "bad", "token": "bad", "new_password": "NewPass5678!"},
+        )
+        assert resp.status_code == 400
+
+
+@pytest.mark.django_db
+class TestAdminImpersonation:
+    def test_admin_can_impersonate_employee(self, admin_client, employee):
+        import jwt as pyjwt
+
+        resp = admin_client.post(
+            "/api/v1/auth/impersonate/",
+            {"user_id": str(employee.user.id)},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert "access" in resp.data
+        payload = pyjwt.decode(resp.data["access"], options={"verify_signature": False})
+        assert "Employee" in payload.get("roles", [])
+        assert payload.get("impersonated_by") is not None
+
+    def test_admin_impersonation_rejects_non_employee(self, admin_client, manager_user):
+        resp = admin_client.post(
+            "/api/v1/auth/impersonate/",
+            {"user_id": str(manager_user.id)},
+            format="json",
         )
         assert resp.status_code == 400

@@ -94,5 +94,37 @@
       "created_at": "2024-03-10T07:00:00Z",
       "updated_at": "2024-03-10T07:00:00Z"
     }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000007",
+    "fields": {
+      "email": "manager2@auricmines.com",
+      "first_name": "Nomsa",
+      "last_name": "Mabaso",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-03-10T07:00:00Z",
+      "created_at": "2024-03-10T07:00:00Z",
+      "updated_at": "2024-03-10T07:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "40000000-0000-0000-0000-000000000008",
+    "fields": {
+      "email": "emp004@auricmines.com",
+      "first_name": "Ayanda",
+      "last_name": "Ncube",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$720000$seed$dummy_hash_replaced_by_management_command",
+      "date_joined": "2024-03-12T07:00:00Z",
+      "created_at": "2024-03-12T07:00:00Z",
+      "updated_at": "2024-03-12T07:00:00Z"
+    }
   }
 ]

@@ -1,10 +1,13 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/endpoints.dart';
 import '../../../core/auth/auth_bloc.dart';
+import '../../../core/auth/token_storage.dart';
+import '../../../core/websocket/ws_service.dart';
 import '../../../injection.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -298,6 +301,61 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _impersonateEmployee(Map<String, dynamic> user) async {
+    final userId = user['id'] as String?;
+    final fullName = user['full_name'] as String? ?? 'Employee';
+    if (userId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Act as Employee'),
+        content: Text(
+          'You are about to log in as $fullName. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      final response = await sl<ApiClient>().post(
+        Endpoints.impersonateUser,
+        data: {'user_id': userId},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final access = data['access'] as String?;
+      final refresh = data['refresh'] as String?;
+      if (access == null || refresh == null) {
+        throw Exception('Impersonation token response is incomplete.');
+      }
+
+      await sl<WsService>().disconnect();
+      await sl<TokenStorage>().saveTokens(accessToken: access, refreshToken: refresh);
+      await sl<WsService>().connect();
+      if (!mounted) return;
+      context.read<AuthBloc>().add(AuthCheckRequested());
+      context.go('/my-ppe');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to impersonate employee: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -356,6 +414,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             final roleLabel = roles.isEmpty
                                 ? 'No role'
                                 : roles.map((r) => r['role_name'] ?? '').join(', ');
+                            final hasEmployeeRole = roles.any(
+                              (r) => (r['role_name'] as String? ?? '') == 'Employee',
+                            );
                             final departments = roles
                                 .map((r) => r['department_name'] as String?)
                                 .whereType<String>()
@@ -375,6 +436,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 trailing: Wrap(
                                   spacing: 6,
                                   children: [
+                                    if (hasEmployeeRole)
+                                      IconButton(
+                                        tooltip: 'Act as employee',
+                                        onPressed: () => _impersonateEmployee(user),
+                                        icon: const Icon(Icons.switch_account_outlined),
+                                      ),
                                     IconButton(
                                       tooltip: 'Send password reset',
                                       onPressed: () =>

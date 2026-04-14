@@ -82,9 +82,16 @@ class EmployeeListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         qs = super().get_queryset()
+        user = self.request.user
+        roles = user.get_roles() if hasattr(user, "get_roles") else []
         dept = self.request.query_params.get("department")
         site = self.request.query_params.get("site")
         status_filter = self.request.query_params.get("status")
+
+        # Managers are limited to their own department team unless elevated.
+        if "Manager" in roles and not any(r in roles for r in ["Admin", "Safety"]) and not user.is_superuser:
+            qs = qs.filter(department__manager=user)
+
         if dept:
             qs = qs.filter(department_id=dept)
         if site:
