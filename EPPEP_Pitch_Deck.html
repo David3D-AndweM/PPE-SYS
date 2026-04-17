@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EPPEP — Enterprise PPE Compliance Platform · Management Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --yellow: #F5A623;
+    --yellow-light: #FFF3D4;
+    --dark: #0D1117;
+    --dark2: #161B22;
+    --dark3: #21262D;
+    --border: #30363D;
+    --text: #E6EDF3;
+    --muted: #8B949E;
+    --green: #3FB950;
+    --green-bg: #0D2A1A;
+    --red: #F85149;
+    --red-bg: #2D1117;
+    --blue: #58A6FF;
+    --blue-bg: #0D1B2A;
+    --purple: #BC8CFF;
+    --purple-bg: #1A0D2A;
+    --orange: #FF8C42;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: rgba(13, 17, 23, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .nav-logo {
+    font-size: 18px; font-weight: 800; color: var(--yellow);
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--text); font-weight: 400; }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    padding: 6px 12px; border-radius: 6px;
+    transition: all .2s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--dark3); }
+  .nav-badge {
+    background: var(--yellow); color: var(--dark);
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: .5px;
+  }
+
+  /* SECTIONS */
+  section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+  section.full-bleed { max-width: 100%; padding: 0; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--yellow); text-transform: uppercase; margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(36px, 6vw, 72px); font-weight: 900; line-height: 1.05; letter-spacing: -2px; }
+  h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 800; line-height: 1.1; letter-spacing: -1px; }
+  h3 { font-size: 22px; font-weight: 700; }
+  h4 { font-size: 16px; font-weight: 600; }
+  p { color: var(--muted); font-size: 16px; line-height: 1.7; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding-top: 100px;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,166,35,0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 50%, rgba(88,166,255,0.08), transparent),
+      var(--dark);
+  }
+  #hero .inner { max-width: 1200px; margin: 0 auto; padding: 0 40px; width: 100%; }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 16px; margin-bottom: 32px;
+    font-size: 13px; color: var(--muted);
+  }
+  .hero-tag .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .hero-title em { font-style: normal; color: var(--yellow); }
+  .hero-sub {
+    font-size: 20px; color: var(--muted); max-width: 640px;
+    margin: 24px 0 40px; line-height: 1.6;
+  }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--yellow); color: var(--dark);
+    padding: 14px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 15px; text-decoration: none;
+    transition: all .2s;
+  }
+  .btn-primary:hover { background: #e09920; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+    padding: 14px 28px; border-radius: 10px;
+    font-weight: 600; font-size: 15px; text-decoration: none;
+    transition: all .2s;
+  }
+  .btn-outline:hover { background: var(--dark3); }
+
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; margin-top: 80px;
+    background: var(--border); border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .hero-stat {
+    background: var(--dark2); padding: 32px 28px;
+  }
+  .hero-stat .num { font-size: 40px; font-weight: 900; color: var(--yellow); letter-spacing: -2px; }
+  .hero-stat .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* CARDS */
+  .card {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+    transition: border-color .2s, transform .2s;
+  }
+  .card:hover { border-color: var(--yellow); transform: translateY(-2px); }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+  /* PROBLEM */
+  #problem { background: var(--dark); }
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; align-items: start; }
+  .problem-list { list-style: none; }
+  .problem-list li {
+    display: flex; gap: 16px; padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .problem-list li:last-child { border-bottom: none; }
+  .problem-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    background: var(--red-bg); border: 1px solid rgba(248,81,73,.3);
+  }
+  .problem-text h4 { color: var(--text); font-size: 15px; margin-bottom: 4px; }
+  .problem-text p { font-size: 14px; }
+  .stat-block {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+  }
+  .stat-block .big-num { font-size: 64px; font-weight: 900; letter-spacing: -3px; color: var(--red); }
+  .stat-block .context { font-size: 14px; color: var(--muted); margin-top: 8px; }
+  .stat-row { display: flex; gap: 20px; margin-top: 20px; }
+  .stat-mini { flex: 1; background: var(--dark3); border-radius: 10px; padding: 16px; }
+  .stat-mini .n { font-size: 28px; font-weight: 800; color: var(--yellow); }
+  .stat-mini .l { font-size: 12px; color: var(--muted); }
+
+  /* SOLUTION */
+  #solution {
+    background: linear-gradient(180deg, var(--dark) 0%, var(--dark2) 100%);
+  }
+  .solution-hero {
+    background: linear-gradient(135deg, var(--dark3) 0%, var(--dark2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 48px;
+    margin-top: 48px; position: relative; overflow: hidden;
+  }
+  .solution-hero::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,166,35,.12), transparent 70%);
+  }
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+  .pillar {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+  }
+  .pillar-icon {
+    font-size: 32px; margin-bottom: 16px;
+  }
+  .pillar h4 { color: var(--text); margin-bottom: 8px; }
+  .pillar p { font-size: 14px; }
+
+  /* ARCH */
+  #architecture { background: var(--dark); }
+  .arch-diagram {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 48px; margin-top: 48px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .arch-layer {
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 20px;
+    transition: border-color .2s;
+  }
+  .arch-layer:hover { border-color: var(--yellow); }
+  .arch-layer-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); min-width: 100px;
+  }
+  .arch-layer-content { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+  .arch-chip {
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 14px;
+    font-size: 13px; color: var(--text);
+  }
+  .arch-chip.yellow { border-color: rgba(245,166,35,.5); color: var(--yellow); background: rgba(245,166,35,.08); }
+  .arch-chip.blue { border-color: rgba(88,166,255,.5); color: var(--blue); background: rgba(88,166,255,.08); }
+  .arch-chip.green { border-color: rgba(63,185,80,.5); color: var(--green); background: rgba(63,185,80,.08); }
+  .arch-chip.purple { border-color: rgba(188,140,255,.5); color: var(--purple); background: rgba(188,140,255,.08); }
+  .arch-chip.orange { border-color: rgba(255,140,66,.5); color: var(--orange); background: rgba(255,140,66,.08); }
+  .arch-arrow { text-align: center; color: var(--muted); font-size: 20px; margin: 4px 0; }
+
+  /* ROLES */
+  #roles { background: var(--dark2); }
+  .roles-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 48px; }
+  .role-card {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px 20px; text-align: center;
+    transition: all .2s;
+  }
+  .role-card:hover { border-color: var(--yellow); transform: translateY(-3px); }
+  .role-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .role-card h4 { font-size: 14px; color: var(--text); margin-bottom: 8px; }
+  .role-card p { font-size: 12px; color: var(--muted); }
+  .role-tag {
+    display: inline-block; margin-top: 12px;
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .role-features { list-style: none; margin-top: 16px; text-align: left; }
+  .role-features li { font-size: 12px; color: var(--muted); padding: 3px 0; }
+  .role-features li::before { content: '→ '; color: var(--yellow); }
+
+  /* WORKFLOWS */
+  #workflows { background: var(--dark); }
+  .workflow-tabs { display: flex; gap: 8px; margin: 40px 0 0; flex-wrap: wrap; }
+  .wf-tab {
+    padding: 10px 20px; border-radius: 8px;
+    background: var(--dark3); border: 1px solid var(--border);
+    color: var(--muted); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+  }
+  .wf-tab.active { background: var(--yellow); color: var(--dark); border-color: var(--yellow); font-weight: 700; }
+  .wf-tab:hover:not(.active) { border-color: var(--yellow); color: var(--text); }
+  .workflow-panel { display: none; }
+  .workflow-panel.active { display: block; }
+  .workflow-content {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px; margin-top: 20px;
+  }
+  .wf-steps { margin-top: 32px; position: relative; }
+  .wf-step {
+    display: flex; gap: 24px; padding: 20px 0;
+    position: relative;
+  }
+  .wf-step-num {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--yellow); color: var(--dark);
+    font-weight: 800; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .wf-step-line {
+    position: absolute; left: 22px; top: 64px;
+    width: 1px; height: calc(100% - 44px);
+    background: var(--border);
+  }
+  .wf-step-body { flex: 1; padding-top: 8px; }
+  .wf-step-body h4 { color: var(--text); margin-bottom: 6px; }
+  .wf-step-body p { font-size: 14px; }
+  .wf-step-tag {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .wf-actors {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .wf-actor {
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--muted);
+  }
+
+  /* DATA */
+  #data { background: var(--dark2); }
+  .data-table-wrap { margin-top: 48px; overflow-x: auto; }
+  .data-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--dark); border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .data-table th {
+    background: var(--dark3); padding: 14px 20px;
+    text-align: left; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--dark2); }
+  .data-table td:first-child { color: var(--yellow); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+  /* TECH DEEP DIVE */
+  #tech { background: var(--dark); }
+  .tech-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 48px; }
+  .tech-card {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .tech-card h4 { color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .tech-card h4 .icon { font-size: 20px; }
+  .tech-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .tech-item:last-child { border-bottom: none; }
+  .tech-item .key { color: var(--muted); }
+  .tech-item .val { color: var(--text); font-weight: 500; text-align: right; max-width: 60%; }
+  .code-block {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--green);
+    margin-top: 16px; overflow-x: auto; line-height: 1.8;
+  }
+  .code-block .comment { color: var(--muted); }
+  .code-block .key { color: var(--blue); }
+  .code-block .val { color: var(--yellow); }
+  .code-block .str { color: var(--orange); }
+
+  /* DEPLOYMENT */
+  #deployment { background: var(--dark2); }
+  .deploy-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+  .deploy-card {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; position: relative;
+  }
+  .deploy-card.featured {
+    border-color: var(--yellow);
+    background: linear-gradient(135deg, rgba(245,166,35,.05), var(--dark));
+  }
+  .deploy-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--yellow); color: var(--dark);
+    font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .deploy-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .deploy-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .deploy-price { font-size: 36px; font-weight: 900; color: var(--yellow); letter-spacing: -1px; }
+  .deploy-price span { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .deploy-items { list-style: none; margin-top: 20px; }
+  .deploy-items li { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); color: var(--muted); display: flex; justify-content: space-between; }
+  .deploy-items li:last-child { border-bottom: none; }
+  .deploy-items li .val { color: var(--text); font-weight: 500; }
+
+  /* ROI */
+  #roi { background: var(--dark); }
+  .roi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+  .roi-card {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .roi-card .before { color: var(--red); font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .roi-card .after { color: var(--green); font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .roi-card .metric { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+  .roi-card .detail { font-size: 12px; color: var(--muted); }
+  .roi-arrow { color: var(--yellow); font-size: 20px; margin: 4px 0; }
+  .roi-total {
+    background: linear-gradient(135deg, rgba(245,166,35,.1), rgba(63,185,80,.05));
+    border: 1px solid var(--yellow);
+    border-radius: 16px; padding: 40px;
+    text-align: center; margin-top: 40px;
+  }
+  .roi-total .big { font-size: 72px; font-weight: 900; color: var(--green); letter-spacing: -4px; }
+  .roi-total .sub { font-size: 18px; color: var(--muted); margin-top: 8px; }
+
+  /* SECURITY */
+  #security { background: var(--dark2); }
+  .security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 48px; }
+  .security-item {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    display: flex; gap: 16px;
+  }
+  .sec-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .sec-body h4 { color: var(--text); margin-bottom: 6px; }
+  .sec-body p { font-size: 13px; }
+
+  /* TIMELINE */
+  #timeline { background: var(--dark); }
+  .timeline { margin-top: 48px; position: relative; }
+  .timeline::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .tl-item { display: flex; gap: 32px; margin-bottom: 32px; }
+  .tl-dot {
+    width: 50px; height: 50px; border-radius: 50%;
+    border: 2px solid var(--yellow); background: var(--dark2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: var(--yellow);
+    flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .tl-body {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; flex: 1;
+  }
+  .tl-phase { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--yellow); margin-bottom: 8px; }
+  .tl-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .tl-body p { font-size: 14px; }
+  .tl-checklist { list-style: none; margin-top: 12px; }
+  .tl-checklist li { font-size: 13px; color: var(--muted); padding: 3px 0; }
+  .tl-checklist li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+
+  /* INDUSTRY */
+  #industries { background: var(--dark2); }
+  .industry-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+  .industry-card {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+  }
+  .industry-card .ico { font-size: 40px; margin-bottom: 12px; }
+  .industry-card h4 { color: var(--text); margin-bottom: 8px; }
+  .industry-card p { font-size: 13px; margin-bottom: 12px; }
+  .industry-card .badge {
+    font-size: 11px; font-weight: 600;
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 10px; color: var(--muted);
+    display: inline-block;
+  }
+
+  /* CTA */
+  #cta {
+    background: linear-gradient(135deg, rgba(245,166,35,.08), rgba(88,166,255,.05), var(--dark));
+    border-top: 1px solid var(--border);
+    text-align: center; padding: 120px 40px;
+  }
+  #cta h2 { max-width: 700px; margin: 0 auto 24px; }
+  #cta p { max-width: 500px; margin: 0 auto 40px; }
+  .cta-actions { display: flex; gap: 12px; justify-content: center; }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: var(--green-bg); border: 1px solid rgba(63,185,80,.3);
+    border-radius: 10px; padding: 16px 24px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px;
+  }
+  .status-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .status-bar p { color: var(--green); font-size: 14px; font-weight: 500; margin: 0; }
+
+  /* COMPARISON TABLE */
+  .compare-table { width: 100%; border-collapse: collapse; margin-top: 48px; }
+  .compare-table th {
+    background: var(--dark3); padding: 16px 20px;
+    text-align: left; font-size: 13px; color: var(--muted);
+    border-bottom: 2px solid var(--border);
+  }
+  .compare-table th:first-child { border-radius: 12px 0 0 0; }
+  .compare-table th:last-child { border-radius: 0 12px 0 0; }
+  .compare-table td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .compare-table tr:hover td { background: var(--dark2); }
+  .compare-table td:first-child { font-weight: 600; color: var(--text); }
+  .check { color: var(--green); font-weight: 700; }
+  .cross { color: var(--red); }
+  .partial { color: var(--yellow); }
+  .compare-table tr:last-child td { border-bottom: none; }
+
+  /* FOOTER */
+  footer {
+    background: var(--dark2); border-top: 1px solid var(--border);
+    padding: 40px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+  footer strong { color: var(--yellow); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .grid-3, .pillars, .deploy-cards, .roi-grid, .industry-grid { grid-template-columns: 1fr; }
+    .grid-2, .tech-grid, .security-grid, .problem-grid { grid-template-columns: 1fr; }
+    .roles-grid { grid-template-columns: repeat(2, 1fr); }
+    .nav-links { display: none; }
+  }
+
+  @media print {
+    nav { display: none; }
+    section { break-inside: avoid; }
+    .card:hover { transform: none; }
+  }
+
+  /* Scroll animation */
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">EPPEP<span> · Pitch Deck</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#workflows">Workflows</a>
+    <a href="#deployment">Deployment</a>
+    <a href="#roi">ROI</a>
+    <a href="#cta">Next Steps</a>
+  </div>
+  <span class="nav-badge">PRODUCTION READY</span>
+</nav>
+
+<!-- HERO -->
+<div id="hero">
+  <div class="inner">
+    <div class="hero-tag">
+      <span class="dot"></span>
+      Platform Status: Built · Tested · Ready to Deploy
+    </div>
+    <h1>The <em>PPE Compliance</em><br>Platform for<br>Industrial Operations</h1>
+    <p class="hero-sub">
+      EPPEP replaces paper-based PPE management with a fully digital,
+      role-aware, QR-verified platform that enforces compliance automatically
+      — from warehouse to worker to regulator.
+    </p>
+    <div class="hero-actions">
+      <a href="#workflows" class="btn-primary">See How It Works</a>
+      <a href="#deployment" class="btn-outline">Deployment Options</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num">9</div>
+        <div class="label">Backend Application Modules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">36+</div>
+        <div class="label">Automated Tests Passing</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">5</div>
+        <div class="label">User Roles Supported</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">3</div>
+        <div class="label">Platforms (Android · iOS · Web)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-label">The Problem</div>
+  <h2>PPE compliance is broken<br>across mining operations</h2>
+  <div class="problem-grid fade-in">
+    <ul class="problem-list">
+      <li>
+        <div class="problem-icon">⏰</div>
+        <div class="problem-text">
+          <h4>Expired PPE Goes Undetected</h4>
+          <p>Items expire with no automated alert. Workers enter hazardous zones without valid equipment. Safety officers only discover violations during manual audits.</p>
+        </div>
+      </li>
+      <li>
+        <div class="problem-icon">📋</div>
+        <div class="problem-text">
+          <h4>Paper-Based Issuing Is Slow & Inaccurate</h4>
+          <p>Paper picking slips get lost, damaged, or forged. Issuing takes 20+ minutes per employee. Stock records are manually updated — and frequently wrong.</p>
+        </div>
+      </li>
+      <li>
+        <div class="problem-icon">📦</div>
+        <div class="problem-text">
+          <h4>Stock-Outs Are Discovered Too Late</h4>
+          <p>Store officers only notice low stock when a worker arrives to collect. By then, the item may be out of stock and compliance is already broken.</p>
+        </div>
+      </li>
+      <li>
+        <div class="problem-icon">🔍</div>
+        <div class="problem-text">
+          <h4>Regulatory Audits Are Painful</h4>
+          <p>Preparing for a DMRE inspection means manually collating spreadsheets across departments and sites. The process takes 40+ hours and is error-prone.</p>
+        </div>
+      </li>
+      <li>
+        <div class="problem-icon">🔄</div>
+        <div class="problem-text">
+          <h4>Employee Transfers Break Compliance</h4>
+          <p>When an employee moves departments, nobody checks whether their PPE meets the new department's requirements. Gaps go undetected indefinitely.</p>
+        </div>
+      </li>
+    </ul>
+    <div>
+      <div class="stat-block">
+        <div class="big-num">$500K</div>
+        <div class="context">Maximum DMRE penalty per non-compliance incident. Average mine faces 3–6 PPE-related violations per audit cycle.</div>
+        <div class="stat-row">
+          <div class="stat-mini">
+            <div class="n">40hrs</div>
+            <div class="l">Audit prep per quarter</div>
+          </div>
+          <div class="stat-mini">
+            <div class="n">20min</div>
+            <div class="l">Per manual PPE issue</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-mini">
+            <div class="n">8-15</div>
+            <div class="l">Expiry incidents per year</div>
+          </div>
+          <div class="stat-mini">
+            <div class="n">2 days</div>
+            <div class="l">New employee PPE setup</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top: 20px; border-color: rgba(245,166,35,.3);">
+        <h4 style="color: var(--yellow); margin-bottom: 8px;">The Regulatory Pressure Is Escalating</h4>
+        <p style="font-size: 14px;">The Mine Health and Safety Act mandates documented, traceable PPE compliance. Inspectors now specifically look for digital audit trails. Paper records are increasingly challenged as insufficient evidence.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section id="solution">
+  <div class="section-label">The Solution</div>
+  <h2>One platform. Full lifecycle.<br>Zero compliance gaps.</h2>
+  <div class="solution-hero fade-in">
+    <div class="status-bar">
+      <span class="dot"></span>
+      <p>EPPEP is fully built, tested, and deployable today. This is not a concept — it is production software.</p>
+    </div>
+    <p style="font-size: 18px; color: var(--text); max-width: 700px; line-height: 1.7;">
+      EPPEP is an end-to-end digital platform that manages every stage of a PPE item's life —
+      from purchase order to warehouse stock, approval workflow, QR-verified issuing,
+      ongoing compliance monitoring, and regulatory audit trail.
+    </p>
+  </div>
+  <div class="pillars fade-in">
+    <div class="pillar">
+      <div class="pillar-icon">🔒</div>
+      <h4>Tamper-Proof QR Issuing</h4>
+      <p>Every picking slip carries a cryptographically signed QR code. The store officer scans it — the system instantly verifies it's authentic, unexpired, and approved before allowing issue.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">⚡</div>
+      <h4>Real-Time Compliance Engine</h4>
+      <p>Automated daily checks scan every PPE assignment. Items expiring in 7 days trigger alerts. Items past expiry are flagged immediately. Managers see live compliance % on their dashboard.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">📱</div>
+      <h4>Mobile-First for Field Use</h4>
+      <p>Flutter app runs on Android, iOS, and web. Store officers scan QR codes in the warehouse. Employees check their compliance status on their phone. No laptop required.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🏗️</div>
+      <h4>Configurable Per Department</h4>
+      <p>Each department can have its own PPE requirements, validity periods, and approval chains. Underground operations can have different rules from surface processing — all managed from the admin panel.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">📊</div>
+      <h4>Immutable Audit Trail</h4>
+      <p>Every approval decision, every stock movement, every QR scan — logged permanently with the user's identity and timestamp. Produces an audit report in minutes, not days.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🏢</div>
+      <h4>Multi-Site Ready</h4>
+      <p>A single installation supports multiple mines, multiple sites, multiple departments — all under one organisation. Each site operates independently while management sees the full picture.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="section-label">System Architecture</div>
+  <h2>How the system is built</h2>
+  <p style="margin-top: 16px; max-width: 600px;">All components run in Docker containers — making deployment identical whether you're running on a local server, cloud VM, or managed Kubernetes cluster.</p>
+  <div class="arch-diagram fade-in">
+
+    <div class="arch-layer">
+      <div class="arch-layer-label">CLIENT</div>
+      <div class="arch-layer-content">
+        <span class="arch-chip yellow">📱 Flutter Mobile (Android)</span>
+        <span class="arch-chip yellow">🍎 Flutter Mobile (iOS)</span>
+        <span class="arch-chip yellow">🌐 Flutter Web App</span>
+        <span class="arch-chip">Role-based Dashboards for all 5 user types</span>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ HTTPS + JWT Token Auth &nbsp;&nbsp;↕ WebSocket (real-time)</div>
+
+    <div class="arch-layer">
+      <div class="arch-layer-label">GATEWAY</div>
+      <div class="arch-layer-content">
+        <span class="arch-chip blue">Nginx Reverse Proxy</span>
+        <span class="arch-chip">SSL Termination</span>
+        <span class="arch-chip">Static File Serving</span>
+        <span class="arch-chip">Load Balancing</span>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+
+    <div class="arch-layer">
+      <div class="arch-layer-label">API LAYER</div>
+      <div class="arch-layer-content">
+        <span class="arch-chip green">Django 5.1 REST API</span>
+        <span class="arch-chip green">Django Channels (WebSocket)</span>
+        <span class="arch-chip">accounts · ppe · inventory · picking</span>
+        <span class="arch-chip">approvals · notifications · audit · org</span>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+
+    <div class="arch-layer">
+      <div class="arch-layer-label">ASYNC TASKS</div>
+      <div class="arch-layer-content">
+        <span class="arch-chip purple">Celery Worker (Daily Expiry Scan)</span>
+        <span class="arch-chip purple">Celery Beat (Scheduler)</span>
+        <span class="arch-chip">Alert Scheduler (Pre-expiry alerts)</span>
+        <span class="arch-chip">Stock Monitor (Hourly reorder check)</span>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+
+    <div class="arch-layer">
+      <div class="arch-layer-label">DATA</div>
+      <div class="arch-layer-content">
+        <span class="arch-chip orange">PostgreSQL 16 (Primary Database)</span>
+        <span class="arch-chip orange">Redis 7 (Cache + Message Broker)</span>
+        <span class="arch-chip orange">MinIO (S3-compatible Media Storage)</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <div style="background: var(--dark3); border-radius: 10px; padding: 16px;">
+        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Auth Method</div>
+        <div style="font-size: 14px; color: var(--text);">JWT tokens embed roles, site IDs, employee ID — zero DB lookups per request for authorization</div>
+      </div>
+      <div style="background: var(--dark3); border-radius: 10px; padding: 16px;">
+        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">QR Security</div>
+        <div style="font-size: 14px; color: var(--text);">HMAC-SHA256 signed payloads. Signature verified server-side on every scan. Unforgeable without the secret key.</div>
+      </div>
+      <div style="background: var(--dark3); border-radius: 10px; padding: 16px;">
+        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Audit Trail</div>
+        <div style="font-size: 14px; color: var(--text);">Append-only log. Every state change records: who, what, when, before-state, after-state. Never modified.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section id="roles" style="padding: 100px 40px; max-width: 1200px; margin: 0 auto;">
+  <div class="section-label">User Roles</div>
+  <h2>Five roles. Each sees exactly<br>what they need.</h2>
+  <div class="roles-grid fade-in">
+
+    <div class="role-card">
+      <div class="role-avatar" style="background: rgba(248,81,73,.15); border: 2px solid rgba(248,81,73,.3);">👤</div>
+      <h4>Admin</h4>
+      <p style="font-size: 12px;">IT / Operations Head</p>
+      <span class="role-tag" style="background: rgba(248,81,73,.1); color: var(--red); border: 1px solid rgba(248,81,73,.3);">Full Access</span>
+      <ul class="role-features">
+        <li>All organizations & sites</li>
+        <li>User management</li>
+        <li>PPE catalogue config</li>
+        <li>Full audit log access</li>
+        <li>System configuration</li>
+      </ul>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar" style="background: rgba(245,166,35,.15); border: 2px solid rgba(245,166,35,.3);">🏗️</div>
+      <h4>Manager</h4>
+      <p style="font-size: 12px;">Shaft / Department Manager</p>
+      <span class="role-tag" style="background: rgba(245,166,35,.1); color: var(--yellow); border: 1px solid rgba(245,166,35,.3);">Department Scope</span>
+      <ul class="role-features">
+        <li>Team compliance dashboard</li>
+        <li>Approve picking slips</li>
+        <li>Create slips for team</li>
+        <li>Employee transfers</li>
+        <li>Expiry oversight</li>
+      </ul>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar" style="background: rgba(88,166,255,.15); border: 2px solid rgba(88,166,255,.3);">🦺</div>
+      <h4>Safety Officer</h4>
+      <p style="font-size: 12px;">HSE Inspector</p>
+      <span class="role-tag" style="background: rgba(88,166,255,.1); color: var(--blue); border: 1px solid rgba(88,166,255,.3);">Safety Scope</span>
+      <ul class="role-features">
+        <li>Pending approvals queue</li>
+        <li>Expired PPE alerts</li>
+        <li>Compliance by department</li>
+        <li>Second-level approval</li>
+        <li>Audit report export</li>
+      </ul>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar" style="background: rgba(63,185,80,.15); border: 2px solid rgba(63,185,80,.3);">📦</div>
+      <h4>Store Officer</h4>
+      <p style="font-size: 12px;">Warehouse Controller</p>
+      <span class="role-tag" style="background: rgba(63,185,80,.1); color: var(--green); border: 1px solid rgba(63,185,80,.3);">Store Scope</span>
+      <ul class="role-features">
+        <li>QR scanner interface</li>
+        <li>Confirm issue (2 taps)</li>
+        <li>Stock level view</li>
+        <li>Receive new stock</li>
+        <li>Reorder alerts</li>
+      </ul>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar" style="background: rgba(188,140,255,.15); border: 2px solid rgba(188,140,255,.3);">⛏️</div>
+      <h4>Employee</h4>
+      <p style="font-size: 12px;">Miner / Operator</p>
+      <span class="role-tag" style="background: rgba(188,140,255,.1); color: var(--purple); border: 1px solid rgba(188,140,255,.3);">Personal Scope</span>
+      <ul class="role-features">
+        <li>My PPE list</li>
+        <li>Compliance badge</li>
+        <li>Expiry countdown</li>
+        <li>Collection notifications</li>
+        <li>Issue history</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOWS -->
+<section id="workflows">
+  <div class="section-label">Core Workflows</div>
+  <h2>Six end-to-end processes,<br>fully automated</h2>
+  <p style="margin-top: 16px; max-width: 600px;">Click each workflow to see exactly how the system handles it — step by step, who does what, and what the system does automatically.</p>
+
+  <div class="workflow-tabs" id="wfTabs">
+    <div class="wf-tab active" data-panel="wf1">PPE Issuing</div>
+    <div class="wf-tab" data-panel="wf2">Expiry Monitoring</div>
+    <div class="wf-tab" data-panel="wf3">New Employee</div>
+    <div class="wf-tab" data-panel="wf4">Employee Transfer</div>
+    <div class="wf-tab" data-panel="wf5">Stock Replenishment</div>
+    <div class="wf-tab" data-panel="wf6">Regulatory Audit</div>
+  </div>
+
+  <!-- WF1 -->
+  <div class="workflow-panel active" id="wf1">
+    <div class="workflow-content">
+      <h3>PPE Issuing Workflow</h3>
+      <p style="margin-top: 8px;">The primary workflow. Covers expiry replacement, lost/damaged items, and new employee first-issue. Average time: 3–5 minutes end-to-end.</p>
+      <div class="wf-steps">
+        <div class="wf-step">
+          <div class="wf-step-num">1</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">TRIGGER</span>
+            <h4>PPE Need Identified</h4>
+            <p>An item expires, is lost, damaged, or a new employee joins. The system can auto-detect expiry and pre-create a slip, or a Manager/Safety Officer can create one manually.</p>
+            <div class="wf-actors"><span class="wf-actor">🏗️ Manager</span><span class="wf-actor">🦺 Safety Officer</span><span class="wf-actor">🤖 Auto (expiry engine)</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">2</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(88,166,255,.1); color: var(--blue);">CREATION</span>
+            <h4>Picking Slip Created</h4>
+            <p>A Picking Slip is generated — listing the employee, department, reason, and all PPE items needed. "Auto-Create" reads the department's PPE requirements and builds the list automatically. Slip enters <strong style="color: var(--yellow);">PENDING</strong> status.</p>
+            <div class="wf-actors"><span class="wf-actor">📋 Picking Slip Document</span><span class="wf-actor">📲 Notification sent to approvers</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">3</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">APPROVAL</span>
+            <h4>Multi-Level Approval</h4>
+            <p>The system checks the PPE configuration for this department and determines the required approval chain (e.g. Manager first, then Safety Officer). Each approver receives a push notification. Rejection at any stage captures a reason and notifies the requester.</p>
+            <div class="wf-actors"><span class="wf-actor">🏗️ Manager approves</span><span class="wf-actor">🦺 Safety Officer approves</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">4</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">QR GENERATED</span>
+            <h4>Slip Approved — QR Code Created</h4>
+            <p>Once all approvals are complete, the slip status changes to <strong style="color: var(--green);">APPROVED</strong>. A cryptographically signed QR code is generated and attached to the slip. The employee receives a "ready to collect" notification.</p>
+            <div class="wf-actors"><span class="wf-actor">🔐 HMAC-SHA256 signed QR</span><span class="wf-actor">📲 Employee notified</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">5</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(188,140,255,.1); color: var(--purple);">SCAN</span>
+            <h4>Employee Visits Store — QR Scanned</h4>
+            <p>The employee presents the QR code (on their phone or printed). The Store Officer opens the scanner in the app and scans it. The system validates the signature, checks the slip is still APPROVED, and displays the items to issue.</p>
+            <div class="wf-actors"><span class="wf-actor">⛏️ Employee</span><span class="wf-actor">📦 Store Officer scans</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">6</div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">COMPLETE</span>
+            <h4>Issue Confirmed — All Records Updated</h4>
+            <p>Store Officer taps "Confirm Issue". In a single transaction: stock is deducted from the warehouse, a PPE Assignment is created for the employee with its expiry date, the slip moves to <strong style="color: var(--green);">ISSUED</strong>, and the full audit trail is written.</p>
+            <div class="wf-actors"><span class="wf-actor">📦 Stock deducted</span><span class="wf-actor">✅ PPE Assignment created</span><span class="wf-actor">📋 Audit trail logged</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WF2 -->
+  <div class="workflow-panel" id="wf2">
+    <div class="workflow-content">
+      <h3>Expiry & Compliance Monitoring</h3>
+      <p style="margin-top: 8px;">Fully automated. No human triggers required. The system catches problems before the shift starts.</p>
+      <div class="wf-steps">
+        <div class="wf-step">
+          <div class="wf-step-num">1</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(88,166,255,.1); color: var(--blue);">DAILY 00:30</span>
+            <h4>Expiry Engine Runs</h4>
+            <p>Every night at 00:30, a Celery scheduled task scans every active PPE Assignment across all employees and sites. Items past their expiry date are marked <strong style="color: var(--red);">EXPIRED</strong>. Items within the configured grace period (default 7 days) are marked <strong style="color: var(--yellow);">EXPIRING SOON</strong>.</p>
+            <div class="wf-actors"><span class="wf-actor">🤖 Celery Beat (automated)</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">2</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">ALERTS</span>
+            <h4>Pre-Expiry Alerts Dispatched</h4>
+            <p>Employees receive a notification: "Your [SCSR] expires in 5 days — collect your replacement." Their manager receives the same alert. Critical PPE (SCSR, respirators) triggers escalation to the Safety Officer as well.</p>
+            <div class="wf-actors"><span class="wf-actor">⛏️ Employee notified</span><span class="wf-actor">🏗️ Manager notified</span><span class="wf-actor">🦺 Safety Officer (critical PPE)</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">3</div>
+          <div class="wf-step-line"></div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(248,81,73,.1); color: var(--red);">HOURLY</span>
+            <h4>Stock Monitor Checks Reorder Levels</h4>
+            <p>Every hour, the stock monitor compares current warehouse stock against each item's configured reorder level. If stock falls at or below the threshold (e.g. SCSR quantity drops to 3, reorder level is 5), an alert is sent to the Store Officer and Admin.</p>
+            <div class="wf-actors"><span class="wf-actor">🤖 Celery (automated)</span><span class="wf-actor">📦 Store Officer alerted</span></div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num">4</div>
+          <div class="wf-step-body">
+            <span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">LIVE</span>
+            <h4>Manager Dashboard Updates in Real Time</h4>
+            <p>As expiry statuses change, the Manager's team compliance dashboard updates via WebSocket — without the page refreshing. Compliance % drops live when an item expires; rises when replacement PPE is issued.</p>
+            <div class="wf-actors"><span class="wf-actor">📊 WebSocket push</span><span class="wf-actor">🏗️ Manager sees live %</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WF3 -->
+  <div class="workflow-panel" id="wf3">
+    <div class="workflow-content">
+      <h3>New Employee Onboarding</h3>
+      <p style="margin-top: 8px;">From account creation to fully equipped worker — automated in hours, not days.</p>
+      <div class="wf-steps">
+        <div class="wf-step"><div class="wf-step-num">1</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(248,81,73,.1); color: var(--red);">ADMIN</span><h4>User Account Created</h4><p>Admin creates the user account, assigns the Employee role, and links the employee to their department (e.g. Underground Operations, Shaft 12). Mine number is assigned for physical identification.</p><div class="wf-actors"><span class="wf-actor">👤 Admin</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">2</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(88,166,255,.1); color: var(--blue);">AUTO</span><h4>System Reads Department Requirements</h4><p>The system reads the Department PPE Requirements — what items are mandatory for this department, how many, and what configurations apply. This is pre-configured by the Safety team when the department is set up.</p><div class="wf-actors"><span class="wf-actor">🤖 Auto (no action needed)</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">3</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">AUTO</span><h4>Picking Slip Auto-Generated</h4><p>The system auto-creates a Picking Slip with all required PPE items listed. The Manager receives a notification: "New employee [AM-042] requires PPE — please approve." The standard approval workflow begins.</p><div class="wf-actors"><span class="wf-actor">🤖 Slip auto-created</span><span class="wf-actor">🏗️ Manager notified</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">4</div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">COMPLETE</span><h4>Employee Collects, System Tracks</h4><p>After approval and QR scan at the store, the employee has all required PPE. The system starts counting down expiry timers immediately. Employee can see their compliance status from day one.</p><div class="wf-actors"><span class="wf-actor">⛏️ Employee equipped</span><span class="wf-actor">✅ Compliant from day one</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WF4 -->
+  <div class="workflow-panel" id="wf4">
+    <div class="workflow-content">
+      <h3>Employee Transfer Workflow</h3>
+      <p style="margin-top: 8px;">When an employee moves departments, the system automatically identifies PPE gaps and triggers replacement.</p>
+      <div class="wf-steps">
+        <div class="wf-step"><div class="wf-step-num">1</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">MANAGER</span><h4>Transfer Initiated</h4><p>Manager submits a transfer request via the app: employee AM-001 moves from Underground Operations to Processing Plant.</p><div class="wf-actors"><span class="wf-actor">🏗️ Manager</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">2</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(88,166,255,.1); color: var(--blue);">SYSTEM</span><h4>Gap Analysis Performed</h4><p>The system compares the employee's current valid PPE against the new department's requirements. It identifies what is missing or needs replacement (e.g. Underground requires SCSR; Processing Plant requires chemical splash goggles instead).</p><div class="wf-actors"><span class="wf-actor">🤖 Automated gap check</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">3</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">AUTO</span><h4>Replacement Slip Generated</h4><p>A new Picking Slip is auto-created for only the gap items. Existing valid PPE carried over is not re-issued. The new department's approval chain is used for the new slip.</p><div class="wf-actors"><span class="wf-actor">🤖 Slip for gap items only</span><span class="wf-actor">🏗️ New manager approves</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">4</div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">COMPLETE</span><h4>Employee Transferred and Re-equipped</h4><p>After issue, the employee is linked to the new department with a full compliance record. Old assignments remain in history for audit purposes.</p><div class="wf-actors"><span class="wf-actor">✅ Compliant in new role</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WF5 -->
+  <div class="workflow-panel" id="wf5">
+    <div class="workflow-content">
+      <h3>Stock Replenishment Workflow</h3>
+      <p style="margin-top: 8px;">The system monitors stock levels hourly and alerts before items run out.</p>
+      <div class="wf-steps">
+        <div class="wf-step"><div class="wf-step-num">1</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(248,81,73,.1); color: var(--red);">ALERT</span><h4>Stock Drops to Reorder Level</h4><p>After issuing PPE, the warehouse stock for SCSR drops to 3 units. The reorder level is set to 5. The hourly stock monitor detects this and fires an alert.</p><div class="wf-actors"><span class="wf-actor">📦 Store Officer alerted</span><span class="wf-actor">👤 Admin notified</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">2</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(245,166,35,.1); color: var(--yellow);">ACTION</span><h4>Purchase Order Raised (External)</h4><p>The Store Officer raises a purchase order through the procurement system (external). EPPEP tracks the alert — it does not manage purchasing, but it provides the data that makes the purchase order justifiable and timely.</p><div class="wf-actors"><span class="wf-actor">📦 Store Officer</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">3</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">RECEIVE</span><h4>Stock Received — System Updated</h4><p>When the delivery arrives, the Store Officer logs receipt in EPPEP (Stock Receive endpoint). The quantity is added to the warehouse. A stock movement record is written. The alert is resolved.</p><div class="wf-actors"><span class="wf-actor">📦 Store Officer logs receipt</span><span class="wf-actor">📊 Inventory updated</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">4</div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">AUDIT</span><h4>Full Stock History Available</h4><p>Every stock in and stock out is permanently recorded with reference to the picking slip that caused the deduction. Provides a complete inventory audit trail for any item, at any warehouse, at any time.</p><div class="wf-actors"><span class="wf-actor">📋 Immutable movement log</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WF6 -->
+  <div class="workflow-panel" id="wf6">
+    <div class="workflow-content">
+      <h3>Regulatory Audit Workflow</h3>
+      <p style="margin-top: 8px;">A DMRE inspector arrives. What used to take 40 hours of spreadsheet collation now takes minutes.</p>
+      <div class="wf-steps">
+        <div class="wf-step"><div class="wf-step-num">1</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(248,81,73,.1); color: var(--red);">INSPECTION</span><h4>Inspector Requests Compliance Evidence</h4><p>DMRE inspector asks for: current PPE status per employee, history of all issues in the last 12 months, expired item records, and stock movement history.</p><div class="wf-actors"><span class="wf-actor">🦺 Safety Officer responds</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">2</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(88,166,255,.1); color: var(--blue);">QUERY</span><h4>System Reports Generated in Minutes</h4><p>Safety Officer queries the API or admin panel. Filters by site, date range, employee, PPE type, or status. All data is structured, indexed, and queryable. No manual collation needed.</p><div class="wf-actors"><span class="wf-actor">🤖 API queries</span><span class="wf-actor">📊 Structured data</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">3</div><div class="wf-step-line"></div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(188,140,255,.1); color: var(--purple);">EVIDENCE</span><h4>Tamper-Proof Audit Trail</h4><p>Every picking slip shows: who created it, who approved it (with timestamp), which QR scan authorized the issue, which store officer confirmed it. Approval decisions are cryptographically linked to the issuing event.</p><div class="wf-actors"><span class="wf-actor">🔐 HMAC-verified scan logs</span><span class="wf-actor">📋 Approval audit trail</span></div></div></div>
+        <div class="wf-step"><div class="wf-step-num">4</div><div class="wf-step-body"><span class="wf-step-tag" style="background: rgba(63,185,80,.1); color: var(--green);">RESULT</span><h4>Inspection Passed — No Penalties</h4><p>Complete, traceable, digital evidence satisfies the DMRE requirement. Zero manual preparation. The process that used to take 40 hours takes under 2 hours end to end.</p><div class="wf-actors"><span class="wf-actor">✅ Compliant</span><span class="wf-actor">💰 Penalties avoided</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA MODEL -->
+<section id="data">
+  <div class="section-label">Data Architecture</div>
+  <h2>What the system tracks</h2>
+  <p style="margin-top: 16px; max-width: 700px;">Every entity in the system is modelled with precise relationships, making reporting and audit queries straightforward.</p>
+  <div class="data-table-wrap fade-in">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Entity</th>
+          <th>What It Represents</th>
+          <th>Key Data Points</th>
+          <th>Used For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Organization</td><td>The company (e.g. AuricMines Ltd)</td><td>Name, active status</td><td>Multi-org support</td></tr>
+        <tr><td>Site</td><td>A physical mine or plant</td><td>Name, location, active status</td><td>Site-specific PPE rules</td></tr>
+        <tr><td>Department</td><td>Operational unit within a site</td><td>Name, manager, safety officer</td><td>PPE requirement mapping</td></tr>
+        <tr><td>Employee</td><td>A person + their department link</td><td>Mine number, status, transfer history</td><td>Compliance tracking per person</td></tr>
+        <tr><td>PPEItem</td><td>Master catalogue of PPE types</td><td>Category, is_critical, default validity</td><td>Slip creation, stock tracking</td></tr>
+        <tr><td>PPEConfiguration</td><td>Rules per scope (dept/site/system)</td><td>Validity days, grace days, approval chain</td><td>Determines how long PPE is valid</td></tr>
+        <tr><td>PPEAssignment</td><td>One employee's possession of one PPE item</td><td>Issue date, expiry date, status</td><td>Live compliance record</td></tr>
+        <tr><td>Warehouse</td><td>Physical storage location</td><td>Site, name, active status</td><td>Stock management</td></tr>
+        <tr><td>StockItem</td><td>Current stock level</td><td>Quantity available, reorder level</td><td>Stock alerts, issuing decisions</td></tr>
+        <tr><td>StockMovement</td><td>Every stock change (immutable)</td><td>Type (IN/OUT), quantity, reference</td><td>Inventory audit trail</td></tr>
+        <tr><td>PickingSlip</td><td>The issuing document</td><td>Status, QR code, request type</td><td>Central issuing workflow</td></tr>
+        <tr><td>ScanLog</td><td>Every QR scan attempt</td><td>Result (valid/mismatch/expired), scanned by</td><td>Security audit, fraud detection</td></tr>
+        <tr><td>Notification</td><td>In-app message</td><td>Type, read status, created at</td><td>User inbox, WebSocket push</td></tr>
+        <tr><td>AuditLog</td><td>Every state change (immutable)</td><td>Entity, action, user, before/after state</td><td>Regulatory compliance evidence</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- TECH DEEP DIVE -->
+<section id="tech">
+  <div class="section-label">Technical Specification</div>
+  <h2>Built for production,<br>not just demonstration</h2>
+  <div class="tech-grid fade-in">
+    <div class="tech-card">
+      <h4><span class="icon">🔧</span> Backend Stack</h4>
+      <div class="tech-item"><span class="key">Framework</span><span class="val">Django 5.1 + Django REST Framework</span></div>
+      <div class="tech-item"><span class="key">Language</span><span class="val">Python 3.12</span></div>
+      <div class="tech-item"><span class="key">Database</span><span class="val">PostgreSQL 16</span></div>
+      <div class="tech-item"><span class="key">Cache / Broker</span><span class="val">Redis 7</span></div>
+      <div class="tech-item"><span class="key">Task Queue</span><span class="val">Celery + django-celery-beat</span></div>
+      <div class="tech-item"><span class="key">WebSocket</span><span class="val">Django Channels (ASGI/Daphne)</span></div>
+      <div class="tech-item"><span class="key">Media Storage</span><span class="val">MinIO (S3-compatible)</span></div>
+      <div class="tech-item"><span class="key">Auth</span><span class="val">JWT (djangorestframework-simplejwt)</span></div>
+      <div class="tech-item"><span class="key">QR Signing</span><span class="val">HMAC-SHA256</span></div>
+    </div>
+    <div class="tech-card">
+      <h4><span class="icon">📱</span> Frontend Stack</h4>
+      <div class="tech-item"><span class="key">Framework</span><span class="val">Flutter (Dart)</span></div>
+      <div class="tech-item"><span class="key">Platforms</span><span class="val">Android · iOS · Web</span></div>
+      <div class="tech-item"><span class="key">Architecture</span><span class="val">Feature-first (10 modules)</span></div>
+      <div class="tech-item"><span class="key">State Management</span><span class="val">Provider / Riverpod</span></div>
+      <div class="tech-item"><span class="key">QR Scanning</span><span class="val">Native camera integration</span></div>
+      <div class="tech-item"><span class="key">Real-time</span><span class="val">WebSocket client</span></div>
+      <div class="tech-item"><span class="key">Features</span><span class="val">auth, dashboard, my_ppe, approvals, compliance, scanning, notifications, picking_slips, safety, admin</span></div>
+    </div>
+    <div class="tech-card">
+      <h4><span class="icon">🏗️</span> Infrastructure</h4>
+      <div class="tech-item"><span class="key">Containerisation</span><span class="val">Docker + Docker Compose</span></div>
+      <div class="tech-item"><span class="key">Gateway</span><span class="val">Nginx (reverse proxy + SSL)</span></div>
+      <div class="tech-item"><span class="key">Environments</span><span class="val">dev / staging / production</span></div>
+      <div class="tech-item"><span class="key">CI/CD</span><span class="val">GitHub Actions (3 pipelines)</span></div>
+      <div class="tech-item"><span class="key">Container Registry</span><span class="val">GHCR (multi-arch: amd64 + arm64)</span></div>
+      <div class="tech-item"><span class="key">Security Scanning</span><span class="val">Trivy (SARIF → GitHub Security)</span></div>
+      <div class="tech-item"><span class="key">Test Coverage</span><span class="val">pytest-cov + Codecov</span></div>
+    </div>
+    <div class="tech-card">
+      <h4><span class="icon">🔐</span> Security Architecture</h4>
+      <div class="tech-item"><span class="key">QR Forgery Prevention</span><span class="val">HMAC-SHA256 signed payloads</span></div>
+      <div class="tech-item"><span class="key">Token Auth</span><span class="val">JWT with embedded role claims</span></div>
+      <div class="tech-item"><span class="key">Approval Integrity</span><span class="val">Every approval logged with user + timestamp</span></div>
+      <div class="tech-item"><span class="key">Audit Trail</span><span class="val">Append-only, never mutable</span></div>
+      <div class="tech-item"><span class="key">Scan Logging</span><span class="val">Every QR scan recorded (valid + failed)</span></div>
+      <div class="tech-item"><span class="key">Input Validation</span><span class="val">Schema-level validation on all endpoints</span></div>
+      <div class="tech-item"><span class="key">Role Enforcement</span><span class="val">Endpoint-level permission checks</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 32px;">
+    <h3 style="margin-bottom: 20px; color: var(--text);">Key Technical Design Decisions Explained Simply</h3>
+    <div class="grid-3" style="margin-top: 0;">
+      <div class="card">
+        <h4 style="color: var(--yellow); margin-bottom: 8px;">Why HMAC-Signed QR Codes?</h4>
+        <p style="font-size: 14px;">A plain QR code is just a number — anyone can copy it or print a fake. Our QR codes contain a cryptographic signature generated from a secret key held only by the server. When the Store Officer scans, the server re-computes the signature and verifies it matches. A forged or tampered QR is rejected before any PPE is issued.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--yellow); margin-bottom: 8px;">Why JSONB Approval Chains?</h4>
+        <p style="font-size: 14px;">Approval requirements vary by PPE type and department. By storing the approval chain as structured data in the database, adding a new approval step (e.g. requiring a third sign-off for respiratory equipment) requires zero code changes — an admin updates a database record. The system adapts instantly.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--yellow); margin-bottom: 8px;">Why Append-Only Audit Logs?</h4>
+        <p style="font-size: 14px;">Regulatory compliance requires that historical records cannot be altered after the fact. Our audit log is designed to only ever add new entries — never update or delete. This provides a tamper-evident record that satisfies the most stringent mine safety inspections.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPLOYMENT -->
+<section id="deployment">
+  <div class="section-label">Deployment Options</div>
+  <h2>From single mine to<br>enterprise group</h2>
+  <p style="margin-top: 16px; max-width: 600px;">The same codebase runs across all scales. No rewriting, no new product — just more compute resources.</p>
+  <div class="deploy-cards fade-in">
+    <div class="deploy-card">
+      <div class="deploy-title">Pilot</div>
+      <div class="deploy-sub">Single site · 50–200 workers</div>
+      <div class="deploy-price">~$200<span>/month</span></div>
+      <ul class="deploy-items">
+        <li><span class="key">API Servers</span><span class="val">2 instances</span></li>
+        <li><span class="key">Celery Workers</span><span class="val">2 instances</span></li>
+        <li><span class="key">PostgreSQL</span><span class="val">1 primary</span></li>
+        <li><span class="key">Redis</span><span class="val">1 instance</span></li>
+        <li><span class="key">Storage</span><span class="val">100 GB MinIO</span></li>
+        <li><span class="key">Deploy Target</span><span class="val">Single cloud VM / on-prem server</span></li>
+        <li><span class="key">Setup Time</span><span class="val">1 day</span></li>
+      </ul>
+    </div>
+    <div class="deploy-card featured">
+      <div class="deploy-badge">RECOMMENDED</div>
+      <div class="deploy-title">Production</div>
+      <div class="deploy-sub">2–4 sites · 200–1,000 workers</div>
+      <div class="deploy-price">~$800<span>/month</span></div>
+      <ul class="deploy-items">
+        <li><span class="key">API Servers</span><span class="val">4 instances (load balanced)</span></li>
+        <li><span class="key">Celery Workers</span><span class="val">4 instances (per-queue)</span></li>
+        <li><span class="key">PostgreSQL</span><span class="val">Primary + read replica</span></li>
+        <li><span class="key">Redis</span><span class="val">Primary + replica (HA)</span></li>
+        <li><span class="key">Nginx</span><span class="val">2 (active/passive HA pair)</span></li>
+        <li><span class="key">Storage</span><span class="val">500 GB MinIO cluster</span></li>
+        <li><span class="key">Deploy Target</span><span class="val">Cloud VMs or managed Kubernetes</span></li>
+        <li><span class="key">Setup Time</span><span class="val">3–5 days</span></li>
+      </ul>
+    </div>
+    <div class="deploy-card">
+      <div class="deploy-title">Enterprise</div>
+      <div class="deploy-sub">5–10+ sites · 1,000–5,000 workers</div>
+      <div class="deploy-price">~$3,000<span>/month</span></div>
+      <ul class="deploy-items">
+        <li><span class="key">API Servers</span><span class="val">8+ (auto-scaling)</span></li>
+        <li><span class="key">Celery Workers</span><span class="val">6+ (dedicated queues)</span></li>
+        <li><span class="key">PostgreSQL</span><span class="val">Primary + 2 replicas + PgBouncer</span></li>
+        <li><span class="key">Redis</span><span class="val">Cluster mode (Sentinel)</span></li>
+        <li><span class="key">Storage</span><span class="val">Distributed MinIO (4-node cluster)</span></li>
+        <li><span class="key">Deploy Target</span><span class="val">Managed Kubernetes (EKS/GKE/AKS)</span></li>
+        <li><span class="key">Setup Time</span><span class="val">1–2 weeks</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top: 40px;">
+    <h3 style="color: var(--text); margin-bottom: 20px;">Scaling Triggers — When to Add Capacity</h3>
+    <div class="grid-4" style="gap: 16px;">
+      <div style="background: var(--dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">📈</div>
+        <h4 style="color: var(--text); font-size: 14px; margin-bottom: 6px;">500+ concurrent WebSocket connections</h4>
+        <p style="font-size: 13px;">Add a Channels ASGI instance</p>
+      </div>
+      <div style="background: var(--dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">⏱️</div>
+        <h4 style="color: var(--text); font-size: 14px; margin-bottom: 6px;">API response >300ms p95</h4>
+        <p style="font-size: 13px;">Add a Django API worker</p>
+      </div>
+      <div style="background: var(--dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">📦</div>
+        <h4 style="color: var(--text); font-size: 14px; margin-bottom: 6px;">Celery queue depth >100</h4>
+        <p style="font-size: 13px;">Add a Celery worker instance</p>
+      </div>
+      <div style="background: var(--dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">🗄️</div>
+        <h4 style="color: var(--text); font-size: 14px; margin-bottom: 6px;">DB CPU >70% sustained</h4>
+        <p style="font-size: 13px;">Promote read replica + add PgBouncer</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROI -->
+<section id="roi">
+  <div class="section-label">Return on Investment</div>
+  <h2>What EPPEP costs vs.<br>what it saves</h2>
+  <p style="margin-top: 16px; max-width: 600px;">Based on a 500-employee, 3-site operation. Conservative estimates.</p>
+  <div class="roi-grid fade-in">
+    <div class="roi-card">
+      <div class="metric">Audit Prep Time</div>
+      <div class="before">40 hrs/quarter</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">2 hrs/quarter</div>
+      <div class="detail">Safety Officer time reclaimed: 152 hours/year. At R450/hr: <strong style="color: var(--green);">R68,400 saved/year</strong></div>
+    </div>
+    <div class="roi-card">
+      <div class="metric">PPE Issue Time</div>
+      <div class="before">20 min/issue</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">3 min/issue</div>
+      <div class="detail">500 employees × 4 issues/year = 2,000 issues. Time saved: 567 hours/year. At R300/hr: <strong style="color: var(--green);">R170,000 saved/year</strong></div>
+    </div>
+    <div class="roi-card">
+      <div class="metric">Expiry Incidents</div>
+      <div class="before">8–15/year</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">~0/year</div>
+      <div class="detail">Each incident risks a DMRE penalty of R50K–R500K. At an average of 5 incidents/year: <strong style="color: var(--green);">R250K–R2.5M risk eliminated</strong></div>
+    </div>
+    <div class="roi-card">
+      <div class="metric">Stock-Out Incidents</div>
+      <div class="before">4–6/year</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">~0/year</div>
+      <div class="detail">Hourly reorder alerts prevent stock-outs entirely. Emergency procurement markup eliminated.</div>
+    </div>
+    <div class="roi-card">
+      <div class="metric">New Employee Setup</div>
+      <div class="before">2 days</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">4 hours</div>
+      <div class="detail">Auto-created picking slips and digital approvals accelerate onboarding. No paper to chase.</div>
+    </div>
+    <div class="roi-card">
+      <div class="metric">Transfer Compliance Gaps</div>
+      <div class="before">Undetected</div>
+      <div class="roi-arrow">↓</div>
+      <div class="after">0 gaps</div>
+      <div class="detail">Automated gap analysis on every transfer. Non-compliant workers are never assigned to a new role without required PPE.</div>
+    </div>
+  </div>
+  <div class="roi-total fade-in">
+    <div style="font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Conservative Annual Saving (500-person operation)</div>
+    <div class="big">R500K+</div>
+    <div class="sub">Labor savings + penalty avoidance + procurement efficiency</div>
+    <div style="margin-top: 20px; font-size: 15px; color: var(--text);">Platform cost at Production tier: <strong style="color: var(--yellow);">~R18,000/month (R216K/year)</strong><br>
+    <span style="color: var(--green); font-weight: 700; font-size: 18px;">Net positive in Month 1.</span></div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="security">
+  <div class="section-label">Security</div>
+  <h2>Security built in,<br>not bolted on</h2>
+  <div class="security-grid fade-in">
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.3);">🔐</div>
+      <div class="sec-body">
+        <h4>Signed QR Codes (Anti-Forgery)</h4>
+        <p>Every picking slip QR code is signed with HMAC-SHA256 using a server-held secret key. Any attempt to forge, copy, or replay a QR code is detected and rejected at scan time. Invalid scans are logged.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.3);">🛡️</div>
+      <div class="sec-body">
+        <h4>Role-Based Access Control</h4>
+        <p>Every API endpoint enforces role permissions. Employees cannot see other employees' data. Managers only see their department. Store Officers can only perform scanning and stock operations. Roles cannot be escalated by users.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);">📋</div>
+      <div class="sec-body">
+        <h4>Immutable Audit Trail</h4>
+        <p>Every state change is recorded permanently: who made it, when, what changed, and what the previous state was. The log cannot be modified — not even by administrators. Provides court-admissible evidence of compliance actions.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(188,140,255,.1); border: 1px solid rgba(188,140,255,.3);">🔑</div>
+      <div class="sec-body">
+        <h4>JWT with Embedded Claims</h4>
+        <p>Access tokens carry the user's roles, site access list, and employee ID — eliminating per-request database queries for authorization. Tokens have short expiry windows. Refresh tokens rotate on use.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(255,140,66,.1); border: 1px solid rgba(255,140,66,.3);">🔍</div>
+      <div class="sec-body">
+        <h4>Scan Logging (Fraud Detection)</h4>
+        <p>Every QR scan is recorded — including failed, mismatched, and expired attempts. A pattern of failed scans can indicate a forged document attempt. The full scan history is queryable by admin.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="sec-icon" style="background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3);">🏗️</div>
+      <div class="sec-body">
+        <h4>Automated Security Scanning</h4>
+        <p>Every code push triggers a Trivy security scan across the entire codebase. Results are uploaded to GitHub Security in SARIF format. Critical vulnerabilities block the CI pipeline from deploying.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INDUSTRIES -->
+<section id="industries">
+  <div class="section-label">Market Opportunity</div>
+  <h2>Mining first.<br>But the platform is industry-agnostic.</h2>
+  <p style="margin-top: 16px; max-width: 700px;">The PPE lifecycle problem exists in every industry that operates under health and safety regulations. The EPPEP architecture — configurable rules, approval workflows, QR issuing, compliance tracking — maps directly to all of them.</p>
+  <div class="industry-grid fade-in">
+    <div class="industry-card">
+      <div class="ico">⛏️</div>
+      <h4>Mining (Primary)</h4>
+      <p>SCSR, respirators, hard hats, harnesses, hearing protection, hi-vis. DMRE regulatory compliance. Multi-shaft, multi-site operations.</p>
+      <span class="badge">Mine Health & Safety Act</span>
+    </div>
+    <div class="industry-card">
+      <div class="ico">🏗️</div>
+      <h4>Construction</h4>
+      <p>Hard hats, fall arrest, hi-vis vests, safety boots, eye protection. Multiple active sites, rotating workforces, subcontractor tracking.</p>
+      <span class="badge">OHSA Compliance</span>
+    </div>
+    <div class="industry-card">
+      <div class="ico">🏭</div>
+      <h4>Manufacturing</h4>
+      <p>Gloves, goggles, ear protection, face shields, chemical aprons. Assembly-line workers with department-specific requirements.</p>
+      <span class="badge">ISO 45001</span>
+    </div>
+    <div class="industry-card">
+      <div class="ico">🛢️</div>
+      <h4>Oil & Gas</h4>
+      <p>Fire-retardant coveralls, SCBA, H2S detectors, chemical suits. Offshore and onshore operations with strict rotation compliance.</p>
+      <span class="badge">API RP 54 / OSHA PSM</span>
+    </div>
+    <div class="industry-card">
+      <div class="ico">🏥</div>
+      <h4>Healthcare</h4>
+      <p>Gloves, N95 masks, gowns, face shields. High issue volume, short validity periods, and critical infection-control compliance.</p>
+      <span class="badge">Infection Control Standards</span>
+    </div>
+    <div class="industry-card">
+      <div class="ico">⚗️</div>
+      <h4>Chemical / Petrochemical</h4>
+      <p>HAZMAT suits, full-face respirators, chemical splash goggles. Strict traceability requirements for hazardous material handling.</p>
+      <span class="badge">COSHH / EPA</span>
+    </div>
+  </div>
+</section>
+
+<!-- COMPETITIVE -->
+<section id="competitive" style="background: var(--dark); padding: 100px 40px; max-width: 1200px; margin: 0 auto;">
+  <div class="section-label">Competitive Analysis</div>
+  <h2>No existing solution does<br>what EPPEP does</h2>
+  <table class="compare-table fade-in">
+    <thead>
+      <tr>
+        <th>Capability</th>
+        <th>EPPEP</th>
+        <th>Paper / Spreadsheet</th>
+        <th>Generic CMMS</th>
+        <th>Basic EHS Apps</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Real-time expiry alerts (WebSocket)</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">⚠ email batch</td><td class="partial">⚠ daily</td></tr>
+      <tr><td>Cryptographically signed QR issuing</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="partial">⚠ basic QR</td></tr>
+      <tr><td>Configurable multi-level approvals</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">⚠ fixed</td><td class="cross">✗</td></tr>
+      <tr><td>Auto-create slips from dept requirements</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>Per-department PPE rule hierarchy</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>Immutable append-only audit trail</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">⚠</td><td class="partial">⚠</td></tr>
+      <tr><td>Mobile-first (Android / iOS / Web)</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="partial">⚠ limited</td></tr>
+      <tr><td>Integrated inventory + PPE management</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">⚠ separate</td><td class="cross">✗</td></tr>
+      <tr><td>Employee transfer gap analysis</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>Multi-site, multi-organisation</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="partial">⚠ limited</td></tr>
+      <tr><td>CI/CD + automated security scanning</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">⚠</td><td class="partial">⚠</td></tr>
+      <tr><td>One-command deployment</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 16px; font-size: 13px;"><span class="check">✓</span> Full support &nbsp;&nbsp; <span class="partial">⚠</span> Partial / limited &nbsp;&nbsp; <span class="cross">✗</span> Not supported</p>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline" style="background: var(--dark2); padding: 100px 40px; max-width: 1200px; margin: 0 auto;">
+  <div class="section-label">Implementation Plan</div>
+  <h2>From signed contract<br>to live operations</h2>
+  <div class="timeline fade-in">
+    <div class="tl-item">
+      <div class="tl-dot">1</div>
+      <div class="tl-body">
+        <div class="tl-phase">Phase 1 · Weeks 1–4</div>
+        <div class="tl-title">Pilot Deployment — Single Site</div>
+        <p>Deploy EPPEP to one site with full infrastructure. Configure the organisation, departments, and PPE catalogue. Train 5 users (one per role). Run parallel to existing paper system for 2 weeks to validate. Go live at end of week 4.</p>
+        <ul class="tl-checklist">
+          <li>Docker deployment to production server</li>
+          <li>Seed org structure, employees, PPE catalogue</li>
+          <li>Train Admin, Manager, Safety Officer, Store Officer, Employee</li>
+          <li>Validate QR issuing flow end-to-end</li>
+          <li>Decommission paper picking slips</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">2</div>
+      <div class="tl-body">
+        <div class="tl-phase">Phase 2 · Weeks 5–8</div>
+        <div class="tl-title">Full Site Rollout</div>
+        <p>Extend to all departments at the first site. Enable all Celery scheduled tasks. Store Officer QR scanning fully live. Real-time compliance dashboards active for all managers.</p>
+        <ul class="tl-checklist">
+          <li>All departments onboarded</li>
+          <li>Expiry engine running daily</li>
+          <li>Stock monitor running hourly</li>
+          <li>WebSocket dashboards active</li>
+          <li>First regulatory audit using EPPEP data</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">3</div>
+      <div class="tl-body">
+        <div class="tl-phase">Phase 3 · Weeks 9–16</div>
+        <div class="tl-title">Multi-Site Expansion</div>
+        <p>Onboard additional sites under the same organisation. Configure site-specific PPE rules. Scale infrastructure to Production tier. Integrate with HR system for automated employee onboarding.</p>
+        <ul class="tl-checklist">
+          <li>Additional sites onboarded</li>
+          <li>Site-specific PPE configurations</li>
+          <li>Infrastructure scaled (load balancer, read replica)</li>
+          <li>HR system integration for employee records</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">4</div>
+      <div class="tl-body">
+        <div class="tl-phase">Phase 4 · Months 5–6</div>
+        <div class="tl-title">Enterprise Scale & Analytics</div>
+        <p>Multi-organisation support for group companies. Advanced reporting and analytics. Integration with procurement systems for automated purchase orders on reorder alerts.</p>
+        <ul class="tl-checklist">
+          <li>Group-level analytics dashboard</li>
+          <li>Procurement system API integration</li>
+          <li>Scheduled compliance reports</li>
+          <li>SLA-backed uptime monitoring</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS BUILT -->
+<section id="built" style="background: var(--dark); padding: 100px 40px; max-width: 1200px; margin: 0 auto;">
+  <div class="section-label">Current Status</div>
+  <h2>This is not a concept.<br>It is production software.</h2>
+  <div class="status-bar" style="margin-top: 32px;">
+    <span class="dot"></span>
+    <p>All components are built, tested, and deployable today. One command starts the entire system.</p>
+  </div>
+  <div class="grid-3" style="margin-top: 0; gap: 20px;">
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ Backend — Complete</h4>
+      <p style="font-size: 14px;">9 Django application modules. Full REST API. WebSocket real-time layer. Celery background tasks. 36+ automated tests passing. PostgreSQL + Redis + MinIO integration.</p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ Frontend — Complete</h4>
+      <p style="font-size: 14px;">Flutter app with 10 feature modules. Runs on Android, iOS, and web today. Role-based navigation. QR scanner. Real-time notifications. Offline-tolerant architecture.</p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ Infrastructure — Complete</h4>
+      <p style="font-size: 14px;">Docker Compose configurations for dev, staging, and production. Nginx gateway. 3 GitHub Actions CI/CD pipelines. Multi-arch Docker images. Automated security scanning.</p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ Demo Data — Ready</h4>
+      <p style="font-size: 14px;">Full seeded scenario: AuricMines Ltd, 2 sites, 4 departments, 5 pre-configured user accounts (all roles). Expired PPE, pending approvals, low stock — exercises every workflow immediately.</p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ CI/CD — Complete</h4>
+      <p style="font-size: 14px;">Automated test → security scan → Docker build → staging deploy on every push to develop. Production deploy on version tag. Email notifications to all teams on pass/fail.</p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); margin-bottom: 12px;">✓ Documentation — Complete</h4>
+      <p style="font-size: 14px;">Architecture guide, CI/CD guide, Quick Start, full API reference. 73,000+ words of technical documentation. Setup wizard script for email + automation configuration.</p>
+    </div>
+  </div>
+  <div style="margin-top: 32px; background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 32px;">
+    <h4 style="color: var(--text); margin-bottom: 16px; font-family: 'JetBrains Mono', monospace;">One command to run the entire system:</h4>
+    <div class="code-block">
+      <span class="comment"># Clone the repository</span><br>
+      <span class="key">git</span> clone &lt;repository-url&gt; &amp;&amp; <span class="key">cd</span> PPE_SYSTEM<br><br>
+      <span class="comment"># Configure environment variables</span><br>
+      <span class="key">cp</span> .env.example .env<br><br>
+      <span class="comment"># Start all services (API, WebSocket, Celery, PostgreSQL, Redis, MinIO, Nginx)</span><br>
+      <span class="key">make</span> dev<br><br>
+      <span class="comment"># Load demo data (org structure, employees, PPE catalogue, test accounts)</span><br>
+      <span class="key">make</span> seed<br><br>
+      <span class="comment"># System is live at http://localhost · API at http://localhost/api/v1/</span><br>
+      <span class="str">✓ 8 Docker containers running</span><br>
+      <span class="str">✓ Demo accounts ready (5 roles)</span><br>
+      <span class="str">✓ All workflows exercisable immediately</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="full-bleed" style="padding: 120px 40px; text-align: center;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div class="section-label" style="text-align: center;">Next Steps</div>
+    <h2 style="max-width: 700px; margin: 12px auto 0;">Ready to eliminate PPE compliance risk?</h2>
+    <p style="max-width: 500px; margin: 20px auto 0; font-size: 18px;">EPPEP is built. The demo environment is seeded. Every workflow described in this presentation can be walked through live today.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 60px auto; max-width: 900px; text-align: left;">
+      <div style="background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 28px;">
+        <div style="font-size: 32px; margin-bottom: 12px;">1️⃣</div>
+        <h4 style="color: var(--text); margin-bottom: 8px;">Live Demo</h4>
+        <p style="font-size: 14px;">Walk through all 6 workflows in the live demo environment. See real-time notifications, QR scanning, approval chains, and the compliance dashboard in action.</p>
+      </div>
+      <div style="background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 28px;">
+        <div style="font-size: 32px; margin-bottom: 12px;">2️⃣</div>
+        <h4 style="color: var(--text); margin-bottom: 8px;">Pilot Agreement</h4>
+        <p style="font-size: 14px;">Deploy to a single site for 30 days. Seed your actual org structure, departments, and employees. Measure time savings against the paper baseline.</p>
+      </div>
+      <div style="background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 28px;">
+        <div style="font-size: 32px; margin-bottom: 12px;">3️⃣</div>
+        <h4 style="color: var(--text); margin-bottom: 8px;">Full Rollout</h4>
+        <p style="font-size: 14px;">Onboard all sites under the Production deployment. Configure site-specific PPE rules. Decommission paper processes. First regulatory audit with digital evidence.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a href="#workflows" class="btn-primary" style="font-size: 16px; padding: 16px 36px;">Schedule Live Demo</a>
+      <a href="#deployment" class="btn-outline" style="font-size: 16px; padding: 16px 36px;">Review Deployment Options</a>
+    </div>
+
+    <div style="margin-top: 60px; padding: 40px; background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; max-width: 700px; margin-left: auto; margin-right: auto;">
+      <h4 style="color: var(--text); margin-bottom: 16px;">Demo Login Credentials</h4>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2;">
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--muted);">Admin</span><span style="color: var(--text);">admin@auricmines.com / Admin1234!</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--muted);">Manager</span><span style="color: var(--text);">manager1@auricmines.com / Demo1234!</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--muted);">Safety Officer</span><span style="color: var(--text);">safety1@auricmines.com / Demo1234!</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--muted);">Store Officer</span><span style="color: var(--text);">store1@auricmines.com / Demo1234!</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0;"><span style="color: var(--muted);">Employee</span><span style="color: var(--text);">emp001@auricmines.com / Demo1234!</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>EPPEP</strong> — Enterprise PPE Compliance & Issuing Platform<br>
+  <span style="display: block; margin-top: 8px;">Built with Django 5.1 · Flutter · PostgreSQL · Redis · Docker · GitHub Actions</span>
+  <span style="display: block; margin-top: 8px; color: #444;">Confidential — Management Presentation · April 2026</span>
+</footer>
+
+<script>
+  // Workflow tabs
+  document.querySelectorAll('.wf-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.wf-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+    });
+  });
+
+  // Scroll fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Active nav link
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--yellow)' : '';
+    });
+  });
+</script>
+</body>
+</html>
