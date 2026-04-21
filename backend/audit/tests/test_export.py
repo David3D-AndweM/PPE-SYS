@@ -9,7 +9,6 @@ import pytest
 
 from audit.models import AuditLog
 
-
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 EXPORT_URL = "/api/v1/audit/logs/export/"
@@ -56,9 +55,7 @@ def test_csv_has_correct_headers(admin_client, admin_user):
     assert len(lines) >= 1, "Expected at least a header row"
 
     header_fields = {field.strip() for field in lines[0].split(",")}
-    assert EXPECTED_HEADERS.issubset(header_fields), (
-        f"Missing columns: {EXPECTED_HEADERS - header_fields}"
-    )
+    assert EXPECTED_HEADERS.issubset(header_fields), f"Missing columns: {EXPECTED_HEADERS - header_fields}"
 
 
 @pytest.mark.django_db

@@ -227,9 +227,7 @@ class TestPickingSlipLifecycle:
             default_validity_days=365,
             is_active=True,
         )
-        DepartmentPPERequirement.objects.create(
-            department=department, ppe_item=due_item, is_required=True, quantity=1
-        )
+        DepartmentPPERequirement.objects.create(department=department, ppe_item=due_item, is_required=True, quantity=1)
         EmployeePPE.objects.create(employee=employee, ppe_item=due_item, status=EmployeePPEStatus.EXPIRED)
 
         first = employee_client.post(

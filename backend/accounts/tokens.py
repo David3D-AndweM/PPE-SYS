@@ -17,9 +17,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["full_name"] = user.get_full_name()
 
         # Roles — list of role names (e.g. ["Manager", "Safety"])
-        roles = list(
-            user.user_roles.select_related("role").values_list("role__name", flat=True).distinct()
-        )
+        roles = list(user.user_roles.select_related("role").values_list("role__name", flat=True).distinct())
         # Ensure superusers are always treated as Admin in the frontend router.
         if user.is_superuser and "Admin" not in roles:
             roles.append("Admin")

@@ -167,20 +167,14 @@ class EmployeeGapAnalysisView(APIView):
         from organization.models import Employee
 
         try:
-            employee = Employee.objects.select_related(
-                "user", "department"
-            ).get(id=employee_id)
+            employee = Employee.objects.select_related("user", "department").get(id=employee_id)
         except Employee.DoesNotExist:
             return Response({"detail": "Employee not found."}, status=404)
 
         user = request.user
         roles = set(user.get_roles())
 
-        is_admin_or_safety = (
-            user.is_superuser
-            or "Admin" in roles
-            or "Safety" in roles
-        )
+        is_admin_or_safety = user.is_superuser or "Admin" in roles or "Safety" in roles
 
         if is_admin_or_safety:
             pass  # unrestricted
@@ -189,9 +183,9 @@ class EmployeeGapAnalysisView(APIView):
             from organization.models import Department
 
             managed_dept_ids = set(
-                Department.objects.filter(
-                    models.Q(manager=user) | models.Q(safety_officer=user)
-                ).values_list("id", flat=True)
+                Department.objects.filter(models.Q(manager=user) | models.Q(safety_officer=user)).values_list(
+                    "id", flat=True
+                )
             )
             if employee.department_id not in managed_dept_ids:
                 return Response({"detail": "Permission denied."}, status=403)

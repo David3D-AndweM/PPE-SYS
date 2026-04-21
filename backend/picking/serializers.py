@@ -100,19 +100,16 @@ class CreatePickingSlipSerializer(serializers.Serializer):
         # Exception flows must stay within the employee's department PPE scope.
         if request_type in ("lost", "damaged"):
             allowed_item_ids = set(
-                DepartmentPPERequirement.objects.filter(department=employee.department)
-                .values_list("ppe_item_id", flat=True)
+                DepartmentPPERequirement.objects.filter(department=employee.department).values_list(
+                    "ppe_item_id", flat=True
+                )
             )
             for entry in items:
                 item = entry.get("ppe_item")
                 item_id = getattr(item, "id", None)
                 if item_id not in allowed_item_ids:
                     raise serializers.ValidationError(
-                        {
-                            "items": (
-                                "You can only claim PPE that is assigned to your department."
-                            )
-                        }
+                        {"items": ("You can only claim PPE that is assigned to your department.")}
                     )
 
         return attrs

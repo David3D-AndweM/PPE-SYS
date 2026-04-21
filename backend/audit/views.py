@@ -99,13 +99,15 @@ class AuditLogExportView(APIView):
                 user_email = "system"
                 user_name = "system"
 
-            yield writer.writerow([
-                log.timestamp.isoformat(),
-                user_email,
-                user_name,
-                log.action,
-                log.entity_type,
-                str(log.entity_id) if log.entity_id else "",
-                log.ip_address or "",
-                json.dumps(log.metadata, default=str, ensure_ascii=False),
-            ])
+            yield writer.writerow(
+                [
+                    log.timestamp.isoformat(),
+                    user_email,
+                    user_name,
+                    log.action,
+                    log.entity_type,
+                    str(log.entity_id) if log.entity_id else "",
+                    log.ip_address or "",
+                    json.dumps(log.metadata, default=str, ensure_ascii=False),
+                ]
+            )

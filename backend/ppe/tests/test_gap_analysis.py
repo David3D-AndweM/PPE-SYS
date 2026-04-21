@@ -9,7 +9,6 @@ from django.urls import reverse
 from ppe.factories import EmployeePPEFactory, PPEItemFactory
 from ppe.models import DepartmentPPERequirement, EmployeePPEStatus
 
-
 # ─── Service-level tests ─────────────────────────────────────────────────────
 
 
@@ -172,6 +171,7 @@ def test_employee_cannot_view_other_gap(employee_client, department, role_employ
     other_user = UserFactory(email="other@test.com")
     UserRoleFactory(user=other_user, role=role_employee)
     from organization.factories import EmployeeFactory
+
     other_emp = EmployeeFactory(department=department, user=other_user)
 
     url = f"/api/v1/ppe/gap-analysis/{other_emp.id}/"
@@ -183,6 +183,7 @@ def test_employee_cannot_view_other_gap(employee_client, department, role_employ
 def test_gap_analysis_404_for_unknown_employee(admin_client):
     """GET with a non-existent employee UUID → 404."""
     import uuid
+
     url = f"/api/v1/ppe/gap-analysis/{uuid.uuid4()}/"
     response = admin_client.get(url)
     assert response.status_code == 404
