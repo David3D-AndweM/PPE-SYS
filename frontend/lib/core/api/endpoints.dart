@@ -60,6 +60,11 @@ class Endpoints {
 
   // Audit
   static String get auditLogs => '$base/audit/logs/';
+  static String get auditLogsExport => '$base/audit/logs/export/';
+
+  // Gap Analysis
+  static String gapAnalysis(String employeeId) =>
+      '$base/ppe/gap-analysis/$employeeId/';
 
   // WebSocket
   static String notificationsWs(String token) =>

@@ -46,6 +46,10 @@ dependencies:
   flutter_dotenv: ^5.1.0
   image_picker: ^1.2.1
 
+  # File sharing and temp directory access
+  share_plus: ^10.0.0
+  path_provider: ^2.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

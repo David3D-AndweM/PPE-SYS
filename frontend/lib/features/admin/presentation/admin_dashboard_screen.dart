@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +22,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _roles = [];
   List<Map<String, dynamic>> _departments = [];
+  int _pendingApprovalsCount = 0;
+  int _totalStockUnits = 0;
 
   @override
   void initState() {
@@ -37,18 +38,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         sl<ApiClient>().get(Endpoints.users),
         sl<ApiClient>().get(Endpoints.roles),
         sl<ApiClient>().get(Endpoints.departments),
+        sl<ApiClient>().get(Endpoints.pendingApprovals),
+        sl<ApiClient>().get(Endpoints.stock),
       ]);
-      final usersPayload = responses[0].data;
-      final rolesPayload = responses[1].data;
-      final departmentsPayload = responses[2].data;
 
-      final users = _extractList(usersPayload);
-      final roles = _extractList(rolesPayload);
-      final departments = _extractList(departmentsPayload);
+      final users = _extractList(responses[0].data);
+      final roles = _extractList(responses[1].data);
+      final departments = _extractList(responses[2].data);
+      final approvals = _extractList(responses[3].data);
+      final stockItems = _extractList(responses[4].data);
+
+      final totalStock = stockItems.fold<int>(
+        0,
+        (sum, item) => sum + ((item['quantity'] as int?) ?? 0),
+      );
+
       setState(() {
         _users = users;
         _roles = roles;
         _departments = departments;
+        _pendingApprovalsCount = approvals.length;
+        _totalStockUnits = totalStock;
       });
     } catch (e) {
       if (!mounted) return;
@@ -123,6 +133,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       value: selectedRoleId,
                       items: _roles
                           .map(
@@ -144,6 +155,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String?>(
+                      // ignore: deprecated_member_use
                       value: selectedDepartmentId,
                       items: [
                         const DropdownMenuItem<String?>(
@@ -457,54 +469,229 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     ],
                   ),
-                  ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: const [
-                      Card(
-                        child: ListTile(
-                          leading: Icon(Icons.verified_user_outlined),
-                          title: Text('Department-based user control'),
-                          subtitle: Text(
-                            'Admin creates users, assigns roles, and ensures Employee/Manager users are linked to departments.',
-                          ),
-                        ),
-                      ),
-                      Card(
-                        child: ListTile(
-                          leading: Icon(Icons.password_outlined),
-                          title: Text('Password support'),
-                          subtitle: Text(
-                            'Use reset action from Users tab to send reset links and help users recover access.',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // ── Operations tab ──────────────────────────────────────
                   ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      Card(
-                        child: ListTile(
-                          title: const Text('Users'),
-                          trailing: Text('${_users.length}'),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          'Quick Navigation',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
-                      Card(
-                        child: ListTile(
-                          title: const Text('Departments'),
-                          trailing: Text('${_departments.length}'),
+                      _NavCard(
+                        icon: Icons.history_edu_outlined,
+                        color: Colors.indigo,
+                        title: 'Audit Log',
+                        subtitle: 'View and export the immutable system audit trail',
+                        onTap: () => context.go('/admin/audit'),
+                      ),
+                      _NavCard(
+                        icon: Icons.inventory_2_outlined,
+                        color: Colors.teal,
+                        title: 'PPE Inventory',
+                        subtitle: 'Monitor warehouse stock levels and transactions',
+                        onTap: () => context.go('/admin/inventory'),
+                      ),
+                      _NavCard(
+                        icon: Icons.security_outlined,
+                        color: Colors.blue,
+                        title: 'PPE Catalogue',
+                        subtitle: 'Manage PPE items, categories, and global policies',
+                        onTap: () => context.go('/admin/catalogue'),
+                      ),
+                      _NavCard(
+                        icon: Icons.people_outlined,
+                        color: Colors.deepPurple,
+                        title: 'Compliance Overview',
+                        subtitle: 'Review team PPE compliance and manage submissions',
+                        onTap: () => context.go('/compliance'),
+                      ),
+                      _NavCard(
+                        icon: Icons.fact_check_outlined,
+                        color: Colors.green,
+                        title: 'Approvals Queue',
+                        subtitle: 'Review and action pending PPE approval requests',
+                        onTap: () => context.go('/approvals'),
+                      ),
+                    ],
+                  ),
+
+                  // ── Overview tab ─────────────────────────────────────────
+                  ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          'System Overview',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
-                      Card(
-                        child: ListTile(
-                          title: const Text('Roles'),
-                          trailing: Text('${_roles.length}'),
+                      _OverviewMetricRow(items: [
+                        _OverviewMetric(
+                          label: 'Total Users',
+                          value: '${_users.length}',
+                          icon: Icons.people,
+                          color: Colors.blue,
                         ),
-                      ),
+                        _OverviewMetric(
+                          label: 'Departments',
+                          value: '${_departments.length}',
+                          icon: Icons.apartment,
+                          color: Colors.indigo,
+                        ),
+                      ]),
+                      const SizedBox(height: 8),
+                      _OverviewMetricRow(items: [
+                        _OverviewMetric(
+                          label: 'Pending Approvals',
+                          value: '$_pendingApprovalsCount',
+                          icon: Icons.pending_actions,
+                          color: _pendingApprovalsCount > 0
+                              ? Colors.orange
+                              : Colors.green,
+                        ),
+                        _OverviewMetric(
+                          label: 'Stock Units',
+                          value: '$_totalStockUnits',
+                          icon: Icons.inventory_2,
+                          color: _totalStockUnits < 10
+                              ? Colors.red
+                              : Colors.teal,
+                        ),
+                      ]),
+                      const SizedBox(height: 16),
+                      if (_pendingApprovalsCount > 0)
+                        Card(
+                          color: Colors.orange.shade50,
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange,
+                            ),
+                            title: Text(
+                              '$_pendingApprovalsCount pending approval(s) require attention',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            trailing: TextButton(
+                              onPressed: () => context.go('/approvals'),
+                              child: const Text('Review'),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+// ─── Helper widgets ────────────────────────────────────────────────────────────
+
+class _NavCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _NavCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: 0.12),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _OverviewMetric {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _OverviewMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+}
+
+class _OverviewMetricRow extends StatelessWidget {
+  final List<_OverviewMetric> items;
+
+  const _OverviewMetricRow({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (int i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(child: _OverviewMetricCard(metric: items[i])),
+        ],
+      ],
+    );
+  }
+}
+
+class _OverviewMetricCard extends StatelessWidget {
+  final _OverviewMetric metric;
+
+  const _OverviewMetricCard({required this.metric});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(metric.icon, color: metric.color, size: 22),
+            const SizedBox(height: 10),
+            Text(
+              metric.value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              metric.label,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }

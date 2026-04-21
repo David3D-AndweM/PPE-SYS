@@ -95,6 +95,15 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       .where((emp) => _complianceScore((emp['assignments'] as List)) == 1)
       .length;
 
+  int get _compliantEmployees => _employees
+      .where((emp) => _complianceScore((emp['assignments'] as List)) == 2)
+      .length;
+
+  int get _compliancePercent {
+    if (_employees.isEmpty) return 0;
+    return (_compliantEmployees / _employees.length * 100).round();
+  }
+
   String _dateOnly(dynamic raw) {
     final text = (raw ?? '').toString();
     return text.length >= 10 ? text.substring(0, 10) : text;
@@ -158,6 +167,19 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                     children: [
                       Expanded(
                         child: _MetricCard(
+                          title: 'Compliant',
+                          value: '$_compliancePercent%',
+                          icon: Icons.verified_outlined,
+                          color: _compliancePercent == 100
+                              ? Colors.green
+                              : _compliancePercent >= 60
+                                  ? Colors.orange
+                                  : Colors.red,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MetricCard(
                           title: 'Team Size',
                           value: _employees.length.toString(),
                           icon: Icons.people,
@@ -167,7 +189,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _MetricCard(
-                          title: 'Expired PPE',
+                          title: 'Expired',
                           value: _expiredEmployees.toString(),
                           icon: Icons.warning_amber_rounded,
                           color: Colors.red,
@@ -176,7 +198,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _MetricCard(
-                          title: 'Expiring Soon',
+                          title: 'Expiring',
                           value: _expiringSoonEmployees.toString(),
                           icon: Icons.schedule,
                           color: Colors.orange,
@@ -202,7 +224,18 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                       final assignments =
                           (emp['assignments'] as List).cast<Map<String, dynamic>>();
                       final dotColor = _statusDotColor(assignments);
+                      final empId = emp['id'] as String? ?? '';
+                      final empName = emp['full_name'] as String? ?? '';
                       return ExpansionTile(
+                        trailing: IconButton(
+                          tooltip: 'View gap analysis',
+                          icon: const Icon(Icons.analytics_outlined, size: 20),
+                          onPressed: empId.isEmpty
+                              ? null
+                              : () => context.go(
+                                    '/compliance/gap-analysis/$empId?name=${Uri.encodeComponent(empName)}',
+                                  ),
+                        ),
                         leading: Stack(
                           children: [
                             const CircleAvatar(child: Icon(Icons.person)),

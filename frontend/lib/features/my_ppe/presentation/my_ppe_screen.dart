@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/auth_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ppe_status_badge.dart';
 import '../../../injection.dart';
@@ -225,6 +227,20 @@ class _EmployeeContextSliver extends StatelessWidget {
                   onPressed: () => context.push('/my-ppe/slips/create?type=lost'),
                   icon: const Icon(Icons.report_problem_outlined),
                   label: const Text('Lost PPE Claim'),
+                ),
+                Builder(
+                  builder: (ctx) {
+                    final auth = ctx.read<AuthBloc>().state;
+                    final empId = auth is AuthAuthenticated ? auth.employeeId : null;
+                    if (empId == null) return const SizedBox.shrink();
+                    return OutlinedButton.icon(
+                      onPressed: () => context.go(
+                        '/compliance/gap-analysis/$empId?name=My+PPE',
+                      ),
+                      icon: const Icon(Icons.analytics_outlined),
+                      label: const Text('Gap Analysis'),
+                    );
+                  },
                 ),
               ],
             ),

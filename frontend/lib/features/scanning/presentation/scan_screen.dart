@@ -52,16 +52,70 @@ class _ScanScreenState extends State<ScanScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Scan error: $e'), backgroundColor: Colors.red),
-        );
+        _showScanError(e.toString());
         setState(() => _processing = false);
         if (_selectedTab == 0) {
           _controller.start();
         }
       }
     }
+  }
+
+  void _showScanError(String rawError) {
+    final msg = rawError.toLowerCase();
+
+    final String title;
+    final String body;
+    final IconData icon;
+
+    if (msg.contains('signature') ||
+        msg.contains('invalid qr') ||
+        msg.contains('tamper') ||
+        msg.contains('verification failed') ||
+        msg.contains('format')) {
+      title = 'Invalid QR Code';
+      body = 'This QR code appears to be tampered or unrecognised. '
+          'Contact your Safety Officer to regenerate the picking slip.';
+      icon = Icons.gpp_bad_outlined;
+    } else if (msg.contains('issued') || msg.contains('already')) {
+      title = 'Already Issued';
+      body = 'This PPE has already been issued to the employee. '
+          'Check the slip status before scanning again.';
+      icon = Icons.replay_circle_filled_outlined;
+    } else if (msg.contains('rejected')) {
+      title = 'Slip Rejected';
+      body = 'This picking slip was rejected and cannot be issued.';
+      icon = Icons.cancel_outlined;
+    } else if (msg.contains('pending') || msg.contains('not approved') ||
+        msg.contains('approval')) {
+      title = 'Awaiting Approval';
+      body = 'This slip has not been approved yet. '
+          'The manager must approve it before you can issue PPE.';
+      icon = Icons.pending_actions_outlined;
+    } else if (msg.contains('not found')) {
+      title = 'Slip Not Found';
+      body = 'No matching picking slip was found for this QR code.';
+      icon = Icons.search_off_outlined;
+    } else {
+      title = 'Scan Failed';
+      body = rawError;
+      icon = Icons.error_outline;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        icon: Icon(icon, color: Colors.red, size: 36),
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _manualLookup() async {
@@ -93,12 +147,7 @@ class _ScanScreenState extends State<ScanScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lookup error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showScanError(e.toString());
     } finally {
       if (mounted) setState(() => _processing = false);
     }

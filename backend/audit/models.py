@@ -4,11 +4,30 @@ from django.db import models
 from core.models import UUIDModel
 
 
+class AuditImmutableError(Exception):
+    """Raised when code attempts to mutate or delete an AuditLog record."""
+
+
+class AuditLogQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise AuditImmutableError("AuditLog records are immutable and cannot be updated.")
+
+    def delete(self):
+        raise AuditImmutableError("AuditLog records are immutable and cannot be deleted.")
+
+
+class AuditLogManager(models.Manager.from_queryset(AuditLogQuerySet)):
+    pass
+
+
 class AuditLog(UUIDModel):
     """
     Immutable audit trail. Every critical action in the system writes a row here.
-    Records are never updated or deleted.
+    Records are never updated or deleted. Immutability is enforced at the ORM
+    layer; raw SQL bypasses this guard.
     """
+
+    objects = AuditLogManager()
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -21,7 +40,6 @@ class AuditLog(UUIDModel):
     entity_type = models.CharField(max_length=100, db_index=True)
     entity_id = models.UUIDField(null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    # JSONB: arbitrary context (before/after state, related IDs, etc.)
     metadata = models.JSONField(default=dict)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -32,6 +50,14 @@ class AuditLog(UUIDModel):
             models.Index(fields=["entity_type", "entity_id"]),
             models.Index(fields=["user", "timestamp"]),
         ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise AuditImmutableError("AuditLog records are immutable and cannot be updated.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise AuditImmutableError("AuditLog records are immutable and cannot be deleted.")
 
     def __str__(self):
         user_str = self.user.email if self.user else "system"

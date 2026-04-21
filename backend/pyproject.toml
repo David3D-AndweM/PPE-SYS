@@ -3,8 +3,20 @@
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.development"
 python_files = ["test_*.py"]
-testpaths = [".", "--ignore=config"]
+testpaths = [
+    "accounts",
+    "approvals",
+    "audit",
+    "celery_tasks",
+    "core",
+    "inventory",
+    "notifications",
+    "organization",
+    "picking",
+    "ppe",
+]
 addopts = """
+    --ignore=config
     --cov=.
     --cov-report=xml
     --cov-report=html
@@ -15,6 +27,7 @@ addopts = """
     --tb=short
     --disable-warnings
 """
+asyncio_mode = "auto"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
@@ -23,6 +36,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "asyncio: marks tests as async (auto-applied in auto mode)",
 ]
 
 [tool.coverage.run]

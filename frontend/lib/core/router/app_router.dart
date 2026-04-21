@@ -21,6 +21,7 @@ import '../../features/admin/presentation/admin_inventory_screen.dart';
 import '../../features/admin/presentation/admin_ppe_catalogue_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
 import '../../features/safety/presentation/department_ppe_standards_screen.dart';
+import '../../features/compliance/presentation/gap_analysis_screen.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -72,6 +73,13 @@ class AppRouter {
           GoRoute(
               path: '/compliance',
               builder: (_, __) => const ComplianceScreen()),
+          GoRoute(
+            path: '/compliance/gap-analysis/:employeeId',
+            builder: (_, state) => GapAnalysisScreen(
+              employeeId: state.pathParameters['employeeId']!,
+              employeeName: state.uri.queryParameters['name'],
+            ),
+          ),
           GoRoute(
             path: '/safety/standards',
             builder: (_, __) => const DepartmentPpeStandardsScreen(),
@@ -155,7 +163,10 @@ class AppRouter {
         return '/store/scan';
 
       default: // Employee
-        if (loc.startsWith('/my-ppe')) return null;
+        if (loc.startsWith('/my-ppe') ||
+            loc.startsWith('/compliance/gap-analysis')) {
+          return null;
+        }
         return '/my-ppe';
     }
   }

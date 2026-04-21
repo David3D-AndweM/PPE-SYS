@@ -2,7 +2,7 @@ name: Integration & Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags:
       - 'v*'
   workflow_run:
@@ -10,7 +10,7 @@ on:
       - 'Backend CI/CD'
       - 'Frontend CI/CD'
     types: [completed]
-    branches: [main]
+    branches: [main, develop]
 
 env:
   REGISTRY: ghcr.io
@@ -20,7 +20,7 @@ env:
 jobs:
   # Orchestrated deployment to staging
   deploy-staging:
-    if: github.ref == 'refs/heads/develop' && github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.head_branch == 'develop' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment:
       name: staging
