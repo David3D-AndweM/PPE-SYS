@@ -153,6 +153,76 @@ def update_ppe_after_issue(employee_ppe, issue_date: date):
     employee_ppe.save(update_fields=["issue_date", "expiry_date", "status", "updated_at"])
 
 
+def gap_analysis(employee):
+    """
+    Return a detailed gap analysis for a single employee against their
+    department's required PPE.
+
+    Returns a dict with keys:
+        required        — all required items [{ppe_item_id, name}]
+        assigned        — items in valid or expiring_soon status
+        expired         — items past expiry or in expired status
+        pending         — items in pending_issue status
+        missing         — required items with no EmployeePPE row at all
+        compliance_percentage — float 0–100
+        is_compliant    — True only when missing == [] and expired == []
+    """
+    from .models import DepartmentPPERequirement, EmployeePPE, EmployeePPEStatus
+
+    requirements = DepartmentPPERequirement.objects.filter(
+        department=employee.department,
+        is_required=True,
+    ).select_related("ppe_item")
+
+    # Build a lookup: ppe_item_id → EmployeePPE (or None)
+    req_item_ids = [r.ppe_item_id for r in requirements]
+    existing_map = {
+        ep.ppe_item_id: ep
+        for ep in EmployeePPE.objects.filter(
+            employee=employee,
+            ppe_item_id__in=req_item_ids,
+        )
+    }
+
+    required = []
+    assigned = []
+    expired = []
+    pending = []
+    missing = []
+
+    for req in requirements:
+        item = req.ppe_item
+        entry = {"ppe_item_id": str(item.id), "name": item.name}
+        required.append(entry)
+
+        ep = existing_map.get(item.id)
+        if ep is None:
+            missing.append(entry)
+        elif ep.status in (EmployeePPEStatus.VALID, EmployeePPEStatus.EXPIRING_SOON):
+            assigned.append(entry)
+        elif ep.status in (EmployeePPEStatus.EXPIRED, EmployeePPEStatus.BLOCKED):
+            expired.append(entry)
+        elif ep.status == EmployeePPEStatus.PENDING_ISSUE:
+            pending.append(entry)
+        else:
+            missing.append(entry)
+
+    total = len(required)
+    compliant_count = len(assigned)
+    compliance_percentage = (compliant_count / total * 100.0) if total > 0 else 100.0
+    is_compliant = len(missing) == 0 and len(expired) == 0 and len(pending) == 0
+
+    return {
+        "required": required,
+        "assigned": assigned,
+        "expired": expired,
+        "pending": pending,
+        "missing": missing,
+        "compliance_percentage": round(compliance_percentage, 2),
+        "is_compliant": is_compliant,
+    }
+
+
 def get_employee_compliance_summary(employee):
     """
     Returns a dict summarising the employee's PPE compliance status:
@@ -164,6 +234,10 @@ def get_employee_compliance_summary(employee):
     total = assignments.count()
 
     counts = {
+        "employee_name": employee.user.get_full_name(),
+        "mine_number": employee.mine_number,
+        "department_name": employee.department.name,
+        "site_name": employee.department.site.name,
         "total": total,
         "valid": assignments.filter(status=EmployeePPEStatus.VALID).count(),
         "expiring_soon": assignments.filter(status=EmployeePPEStatus.EXPIRING_SOON).count(),

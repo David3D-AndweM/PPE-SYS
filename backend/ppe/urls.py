@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     DepartmentPPERequirementDetailView,
     DepartmentPPERequirementListCreateView,
+    EmployeeGapAnalysisView,
     EmployeePPEListView,
     MyPPEComplianceSummaryView,
     MyPPEView,
@@ -24,4 +25,5 @@ urlpatterns = [
     path("assignments/", EmployeePPEListView.as_view(), name="assignment-list"),
     path("my-ppe/", MyPPEView.as_view(), name="my-ppe"),
     path("my-ppe/compliance/", MyPPEComplianceSummaryView.as_view(), name="my-ppe-compliance"),
+    path("gap-analysis/<uuid:employee_id>/", EmployeeGapAnalysisView.as_view(), name="gap-analysis"),
 ]

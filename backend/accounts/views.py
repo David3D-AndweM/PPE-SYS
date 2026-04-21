@@ -19,7 +19,7 @@ from .serializers import (
     UserRoleSerializer,
     UserSerializer,
 )
-from .tokens import CustomTokenObtainPairView
+from .tokens import CustomTokenObtainPairView, build_token_pair_for_user
 
 
 class LoginView(CustomTokenObtainPairView):
@@ -183,3 +183,39 @@ class AssignRoleView(APIView):
         role_id = request.data.get("role_id")
         UserRole.objects.filter(user_id=user_id, role_id=role_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminImpersonateUserView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response(
+                {"error": "user_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            target_user = User.objects.prefetch_related("user_roles__role").get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        role_names = set(target_user.user_roles.values_list("role__name", flat=True))
+        if "Employee" not in role_names:
+            return Response(
+                {"error": "Impersonation is only allowed for employee accounts."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token_pair = build_token_pair_for_user(target_user, impersonated_by=request.user)
+        return Response(
+            {
+                **token_pair,
+                "impersonated_user": {
+                    "id": str(target_user.id),
+                    "email": target_user.email,
+                    "full_name": target_user.get_full_name(),
+                },
+            }
+        )

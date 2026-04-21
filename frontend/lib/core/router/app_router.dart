@@ -21,6 +21,7 @@ import '../../features/admin/presentation/admin_inventory_screen.dart';
 import '../../features/admin/presentation/admin_ppe_catalogue_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
 import '../../features/safety/presentation/department_ppe_standards_screen.dart';
+import '../../features/compliance/presentation/gap_analysis_screen.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -46,7 +47,9 @@ class AppRouter {
               builder: (_, __) => const SlipListScreen()),
           GoRoute(
               path: '/my-ppe/slips/create',
-              builder: (_, __) => const CreateSlipScreen()),
+              builder: (_, state) => CreateSlipScreen(
+                    initialRequestType: state.uri.queryParameters['type'],
+                  )),
           GoRoute(
             path: '/my-ppe/slips/:id',
             builder: (_, state) =>
@@ -63,10 +66,20 @@ class AppRouter {
 
           // Manager / Safety
           GoRoute(
-              path: '/approvals', builder: (_, __) => const ApprovalsScreen()),
+              path: '/approvals',
+              builder: (_, state) => ApprovalsScreen(
+                    initialApprovalId: state.uri.queryParameters['focus'],
+                  )),
           GoRoute(
               path: '/compliance',
               builder: (_, __) => const ComplianceScreen()),
+          GoRoute(
+            path: '/compliance/gap-analysis/:employeeId',
+            builder: (_, state) => GapAnalysisScreen(
+              employeeId: state.pathParameters['employeeId']!,
+              employeeName: state.uri.queryParameters['name'],
+            ),
+          ),
           GoRoute(
             path: '/safety/standards',
             builder: (_, __) => const DepartmentPpeStandardsScreen(),
@@ -150,7 +163,10 @@ class AppRouter {
         return '/store/scan';
 
       default: // Employee
-        if (loc.startsWith('/my-ppe')) return null;
+        if (loc.startsWith('/my-ppe') ||
+            loc.startsWith('/compliance/gap-analysis')) {
+          return null;
+        }
         return '/my-ppe';
     }
   }
@@ -261,7 +277,7 @@ class _AppShell extends StatelessWidget {
       case 'Manager':
         return [
           const _NavItem(
-              Icons.people_outline, Icons.people, 'Compliance', '/compliance'),
+              Icons.people_outline, Icons.people, 'Team', '/compliance'),
           const _NavItem(Icons.fact_check_outlined, Icons.fact_check,
               'Approvals', '/approvals'),
           const _NavItem(Icons.notifications_outlined, Icons.notifications,

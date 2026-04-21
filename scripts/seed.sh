@@ -29,11 +29,13 @@ from accounts.models import User
 demo_password = 'Demo1234!'
 demo_emails = [
     'manager1@auricmines.com',
+    'manager2@auricmines.com',
     'safety1@auricmines.com',
     'store1@auricmines.com',
     'emp001@auricmines.com',
     'emp002@auricmines.com',
     'emp003@auricmines.com',
+    'emp004@auricmines.com',
 ]
 
 for email in demo_emails:
@@ -44,12 +46,28 @@ for email in demo_emails:
     user.save(update_fields=['password'])
 "
 
-echo "==> Creating superuser (admin@aucricmines.com / Admin1234!)..."
+echo "==> Creating superuser (admin@auricmines.com / Admin1234!)..."
 DJANGO_SUPERUSER_EMAIL=admin@auricmines.com \
 DJANGO_SUPERUSER_PASSWORD=Admin1234! \
 DJANGO_SUPERUSER_FIRST_NAME=System \
 DJANGO_SUPERUSER_LAST_NAME=Admin \
 python manage.py createsuperuser --noinput 2>/dev/null || echo "Superuser already exists, skipping."
+
+echo "==> Enforcing admin credentials..."
+python manage.py shell -c "
+from accounts.models import User
+admin_email = 'admin@auricmines.com'
+admin_password = 'Admin1234!'
+user = User.objects.filter(email=admin_email).first()
+if user:
+    user.is_active = True
+    user.is_staff = True
+    user.is_superuser = True
+    user.first_name = user.first_name or 'System'
+    user.last_name = user.last_name or 'Admin'
+    user.set_password(admin_password)
+    user.save(update_fields=['is_active', 'is_staff', 'is_superuser', 'first_name', 'last_name', 'password'])
+"
 
 echo "==> Seed complete."
 echo "==> Admin login: admin@auricmines.com / Admin1234!"

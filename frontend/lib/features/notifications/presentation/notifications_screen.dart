@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/auth/auth_bloc.dart';
 import '../../../core/websocket/ws_service.dart';
 import '../../../injection.dart';
 import '../data/notifications_repository.dart';
@@ -30,6 +34,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _markAllRead() async {
     await sl<NotificationsRepository>().markAllRead();
     _load();
+  }
+
+  void _navigateForNotification(BuildContext context, String type) {
+    final auth = context.read<AuthBloc>().state;
+    final role = auth is AuthAuthenticated ? auth.primaryRole : 'Employee';
+
+    switch (type) {
+      case 'approval':
+        context.go('/approvals');
+      case 'expiry':
+      case 'compliance':
+        if (role == 'Employee') {
+          context.go('/my-ppe');
+        } else {
+          context.go('/compliance');
+        }
+      case 'stock':
+        if (role == 'Admin' || role == 'Store') {
+          context.go('/admin/inventory');
+        }
+      default:
+        break;
+    }
   }
 
   IconData _iconFor(String type) {
@@ -83,6 +110,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               sl<NotificationsRepository>().markRead(n['id']);
                               setState(() => n['is_read'] = true);
                             }
+                            _navigateForNotification(
+                              context,
+                              n['notification_type'] as String? ?? '',
+                            );
                           },
                         );
                       },

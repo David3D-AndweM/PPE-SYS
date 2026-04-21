@@ -82,6 +82,38 @@ class CreatePickingSlipSerializer(serializers.Serializer):
             cleaned.append({"ppe_item": ppe_item, "quantity": int(quantity)})
         return cleaned
 
+    def validate(self, attrs):
+        from organization.models import Employee
+        from ppe.models import DepartmentPPERequirement
+
+        employee_id = attrs.get("employee_id")
+        items = attrs.get("items") or []
+        request_type = attrs.get("request_type")
+        if not employee_id or not items:
+            return attrs
+
+        try:
+            employee = Employee.objects.select_related("department").get(pk=employee_id)
+        except Employee.DoesNotExist as exc:
+            raise serializers.ValidationError({"employee_id": "Employee not found."}) from exc
+
+        # Exception flows must stay within the employee's department PPE scope.
+        if request_type in ("lost", "damaged"):
+            allowed_item_ids = set(
+                DepartmentPPERequirement.objects.filter(department=employee.department).values_list(
+                    "ppe_item_id", flat=True
+                )
+            )
+            for entry in items:
+                item = entry.get("ppe_item")
+                item_id = getattr(item, "id", None)
+                if item_id not in allowed_item_ids:
+                    raise serializers.ValidationError(
+                        {"items": ("You can only claim PPE that is assigned to your department.")}
+                    )
+
+        return attrs
+
 
 class AutoCreatePickingSlipSerializer(serializers.Serializer):
     employee_id = serializers.UUIDField()

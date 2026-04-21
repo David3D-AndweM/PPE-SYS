@@ -17,7 +17,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["full_name"] = user.get_full_name()
 
         # Roles — list of role names (e.g. ["Manager", "Safety"])
-        token["roles"] = list(user.user_roles.select_related("role").values_list("role__name", flat=True).distinct())
+        roles = list(user.user_roles.select_related("role").values_list("role__name", flat=True).distinct())
+        # Ensure superusers are always treated as Admin in the frontend router.
+        if user.is_superuser and "Admin" not in roles:
+            roles.append("Admin")
+        token["roles"] = roles
 
         # Employee ID (null if the user is admin-only and has no employee record)
         try:
@@ -37,3 +41,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+def build_token_pair_for_user(user, impersonated_by=None):
+    """
+    Issue a token pair for an existing user account.
+    Used by admin impersonation flow.
+    """
+    refresh = CustomTokenObtainPairSerializer.get_token(user)
+    if impersonated_by is not None:
+        refresh["impersonated_by"] = str(impersonated_by.id)
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }

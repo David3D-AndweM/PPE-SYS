@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
+    AdminImpersonateUserView,
     AssignRoleView,
     ChangePasswordView,
     LoginView,
@@ -23,6 +24,7 @@ urlpatterns = [
     path("users/", UserListCreateView.as_view(), name="user-list"),
     path("users/<uuid:pk>/", UserDetailView.as_view(), name="user-detail"),
     path("users/<uuid:user_id>/roles/", AssignRoleView.as_view(), name="user-roles"),
+    path("impersonate/", AdminImpersonateUserView.as_view(), name="impersonate-user"),
     path("roles/", RoleListView.as_view(), name="roles"),
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),

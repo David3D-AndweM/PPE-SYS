@@ -19,21 +19,15 @@ def create_approvals_for_slip(picking_slip, approval_levels):
     approval_levels example:
     [{"role": "manager", "required": True}, {"role": "safety", "required": True}]
     """
-    approvals = []
-    for level in approval_levels:
-        role = level.get("role", "manager")
-        required = level.get("required", True)
-        approval = Approval.objects.create(
-            picking_slip=picking_slip,
-            required_role=role,
-            is_required=required,
-            status=ApprovalStatus.PENDING,
-        )
-        approvals.append(approval)
-
-    # Notify role holders
-    _notify_approvers(picking_slip, approval_levels)
-    return approvals
+    # Business rule: department manager is the single approval authority.
+    approval = Approval.objects.create(
+        picking_slip=picking_slip,
+        required_role="manager",
+        is_required=True,
+        status=ApprovalStatus.PENDING,
+    )
+    _notify_approvers(picking_slip, [{"role": "manager", "required": True}])
+    return [approval]
 
 
 @transaction.atomic
@@ -161,6 +155,12 @@ def _validate_approver_role(approval, user):
     required = role_map.get(approval.required_role, approval.required_role.capitalize())
     if required not in roles and not user.is_superuser:
         raise PermissionError(f"You must hold the {required} role to perform this approval.")
+
+    # Department manager ownership check for manager approvals.
+    if approval.required_role == "manager" and not user.is_superuser:
+        dept_manager_id = approval.picking_slip.department.manager_id
+        if dept_manager_id != user.id:
+            raise PermissionError("Only the assigned department manager can approve this request.")
 
 
 def _notify_approvers(picking_slip, approval_levels):
